@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STARMARC STUDIOS - CLOUD V2</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="bg-[#070707] text-white min-h-screen">
+<div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-[20px] w-full max-w-sm">
+    <div class="text-center">
+      <div class="w-14 h-14 bg-white text-black rounded-2xl flex items-center justify-center mx-auto font-black text-xl">S</div>
+      <h1 class="text-2xl font-black mt-4">STARMARC CLOUD</h1>
+      <p class="text-zinc-500 text-[11px] mt-1">Master: starmarc.estudio@gmail.com</p>
+    </div>
+    <input id="email" type="email" placeholder="starmarc.estudio@gmail.com" class="w-full mt-7 p-3.5 rounded-xl bg-black border border-zinc-800 text-sm outline-none focus:border-white">
+    <input id="pass" type="password" placeholder="Contraseña min 6 letras" class="w-full mt-3 p-3.5 rounded-xl bg-black border border-zinc-800 text-sm outline-none focus:border-white">
+    <button id="btnLogin" class="w-full mt-5 bg-white text-black font-black p-3.5 rounded-xl">ENTRAR / CREAR CUENTA</button>
+    <p id="msg" class="text-center text-[11px] mt-4 text-zinc-400 min-h-[16px]"></p>
+  </div>
+</div>
+
+<div id="appScreen" class="hidden">
+  <header class="border-b border-zinc-900 bg-black sticky top-0">
+    <div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
+      <h1 class="font-black text-sm">STARMARC • <span id="userEmail"></span> <span id="userRole" class="bg-white text-black px-2 py-0.5 rounded text-[10px] ml-2"></span></h1>
+      <button id="btnLogout" class="text-xs bg-zinc-900 px-4 py-2 rounded-full">Salir</button>
+    </div>
+  </header>
+  <main class="max-w-6xl mx-auto p-6">
+    <div class="border-2 border-dashed border-zinc-800 rounded-[20px] p-12 text-center bg-zinc-900/20">
+      <input type="file" id="fileInput" class="hidden">
+      <button onclick="document.getElementById('fileInput').click()" class="bg-white text-black font-black px-8 py-3 rounded-full text-sm">SUBIR ARCHIVO A LA NUBE</button>
+      <p id="uploadStatus" class="text-xs mt-3 text-zinc-400"></p>
+    </div>
+    <div id="filesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-8"></div>
+  </main>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+const SUPABASE_URL = 'https://cdffffghheikcmstcmcl.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_otcfh8jx0UppsEePiD3egw_BE_P7vRF';
+const MASTER_EMAIL = 'starmarc.estudio@gmail.com';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function checkSession(){
+  const { data } = await supabase.auth.getSession();
+  if(data.session){ showApp(data.session.user.email); }
+}
+checkSession();
+
+function showApp(email){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  document.getElementById('userEmail').innerText = email;
+  document.getElementById('userRole').innerText = email.toLowerCase()===MASTER_EMAIL.toLowerCase() ? 'MAESTRO' : 'USUARIO';
+  loadFiles();
+}
+
+document.getElementById('btnLogin').onclick = async () => {
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const password = document.getElementById('pass').value.trim();
+  const msg = document.getElementById('msg');
+  if(!email || password.length < 6){ msg.innerText='Pon correo y contraseña de 6+ letras'; return; }
+  msg.innerText='Conectando...';
+  let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error){
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+    if(signUpError){ msg.innerText = signUpError.message; return; }
+    if(signUpData.user){
+      await supabase.from('profiles').insert({ id: signUpData.user.id, email, role: email===MASTER_EMAIL?'master':'user' });
+    }
+    msg.innerText='¡Cuenta creada! Entrando...';
+    const { data: loginData } = await supabase.auth.signInWithPassword({ email, password });
+    if(loginData.session){ showApp(email); }
+    return;
+  }
+  showApp(data.user.email);
+};
+
+document.getElementById('btnLogout').onclick = async () => { await supabase.auth.signOut(); location.reload(); };
+
+document.getElementById('fileInput').onchange = async (e) => {
+  const file = e.target.files[0]; if(!file) return;
+  const status = document.getElementById('uploadStatus');
+  status.innerText = 'Subiendo ' + file.name + '...';
+  const fileName = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.-]/g,'_');
+  const { error } = await supabase.storage.from('archivos').upload(fileName, file);
+  if(error){ status.innerText='Error: '+error.message; return; }
+  const { data: urlData } = supabase.storage.from('archivos').getPublicUrl(fileName);
+  const { data: userData } = await supabase.auth.getUser();
+  await supabase.from('files').insert({ user_id: userData.user?.id, name: file.name, url: urlData.publicUrl, size: (file.size/1024).toFixed(1)+' KB', type: file.type || 'file' });
+  status.innerText='¡Subido! '+file.name;
+  loadFiles();
+};
+
+async function loadFiles(){
+  const grid = document.getElementById('filesGrid');
+  const { data } = await supabase.from('files').select('*').order('created_at',{ascending:false});
+  grid.innerHTML='';
+  if(!data) return;
+  data.forEach(f=>{
+    grid.innerHTML+=`<div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"><p class="text-sm font-bold truncate">${f.name}</p><p class="text-[11px] text-zinc-500">${f.size}</p><div class="flex gap-2 mt-3"><a href="${f.url}" target="_blank" class="flex-1 text-center bg-white text-black text-xs font-black py-2 rounded-full">VER</a><a href="${f.url}" download class="flex-1 text-center bg-zinc-800 text-white text-xs py-2 rounded-full border border-zinc-700">DESCARGAR</a></div></div>`;
+  });
+}
+</script>
+</body>
+</html>
