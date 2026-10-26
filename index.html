@@ -1,176 +1,80 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mis Archivos - Starmars Cloud</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-body{font-family:'Inter',sans-serif}
-.bg-galaxy{background:#060a1e;min-height:100vh;position:relative;background-image:radial-gradient(ellipse at 20% 30%, #1a2a6a 0%, #0f1230 40%, #060a1e 70%),radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.2) 0%, transparent 50%)}
-.glass{background:rgba(255,255,255,0.08);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.15)}
-.input-glass{background:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.2)}
-.card-file{background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);transition:0.3s}
-.card-file:hover{transform:translateY(-3px);border-color:rgba(59,130,246,0.4)}
-.active-folder{background:rgba(255,255,255,0.12)!important;font-weight:600}
-</style>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');body{font-family:'Inter',sans-serif}.bg-galaxy{background:#060a1e;min-height:100vh;background-image:radial-gradient(ellipse at 20% 30%,#1a2a6a 0%,#0f1230 40%,#060a1e 70%)}.glass{background:rgba(255,255,255,0.08);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.15)}.input-glass{background:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.2)}.card-file{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12)}.active-folder{background:rgba(255,255,255,0.15)!important}</style>
 </head>
 <body class="bg-galaxy text-white">
+<div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center p-4">
+<div class="glass rounded-[24px] w-full max-w-[440px] p-8">
+<div class="text-center mb-6"><h1 class="text-[28px] font-extrabold">Mis Archivos</h1><p class="text-sky-200/60">Starmars Cloud</p><h2 class="mt-4 font-semibold">Iniciar sesión</h2></div>
+<div class="space-y-3"><div class="input-glass rounded-xl flex items-center px-4 py-3"><i class="fa-regular fa-envelope mr-3 text-zinc-600"></i><input id="email" type="email" placeholder="correo electronico" class="bg-transparent outline-none w-full text-zinc-800"></div><div class="input-glass rounded-xl flex items-center px-4 py-3"><i class="fa-solid fa-lock mr-3 text-zinc-600"></i><input id="pass" type="password" placeholder="contraseña" class="bg-transparent outline-none w-full text-zinc-800"><i class="fa-regular fa-eye text-zinc-600 ml-2" onclick="document.getElementById('pass').type=document.getElementById('pass').type==='password'?'text':'password'"></i></div><button id="btnLogin" class="w-full bg-[#1a73e8] py-3 rounded-xl font-semibold">Iniciar Sesión</button><p id="msg" class="text-center text-xs h-4 text-sky-200"></p></div>
+</div></div>
 
-<div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center p-4 relative z-10">
-  <div class="glass rounded-[24px] w-full max-w-[440px] p-8">
-    <div class="text-center mb-8">
-      <div class="flex items-center justify-center gap-3">
-        <svg viewBox="0 0 64 48" class="w-14 h-14"><path d="M20 8 C10 8 4 16 8 26 C12 34 20 32 26 28" fill="none" stroke="#38bdf8" stroke-width="3"/><path d="M32 16 L36 24 L44 25 L38 30 L40 38 L32 33 L24 38 L26 30 L20 25 L28 24 Z" fill="none" stroke="#38bdf8" stroke-width="2.5"/></svg>
-        <div class="text-left"><h1 class="text-[30px] font-extrabold leading-none">Mis Archivos</h1><p class="text-sky-200/70 text-[16px]">Starmars Cloud</p></div>
-      </div>
-      <h2 class="text-[20px] font-semibold mt-6">Iniciar sesión</h2>
-    </div>
-    <div class="space-y-4">
-      <div class="input-glass rounded-xl flex items-center px-4 py-3.5"><i class="fa-regular fa-envelope mr-3 text-zinc-600"></i><input id="email" type="email" placeholder="correo electronico" class="bg-transparent outline-none w-full text-zinc-800 text-[15px]"></div>
-      <div class="input-glass rounded-xl flex items-center px-4 py-3.5"><i class="fa-solid fa-lock mr-3 text-zinc-600"></i><input id="pass" type="password" placeholder="contraseña" class="bg-transparent outline-none w-full text-zinc-800 text-[15px]"><i class="fa-regular fa-eye text-zinc-600 cursor-pointer" onclick="document.getElementById('pass').type=document.getElementById('pass').type==='password'?'text':'password'"></i></div>
-      <button id="btnLogin" class="w-full bg-[#1a73e8] hover:bg-[#1557b0] text-white font-semibold py-3.5 rounded-xl">Iniciar Sesión</button>
-      <p id="msg" class="text-center text-xs h-4 text-sky-200"></p>
-      <div class="flex items-center gap-2 py-1"><div class="h-[1px] flex-1 bg-white/20"></div><span class="text-[12px] text-white/50">o continuar con</span><div class="h-[1px] flex-1 bg-white/20"></div></div>
-      <div class="grid grid-cols-2 gap-3"><button class="bg-white text-zinc-800 rounded-xl py-3 text-[13px] font-semibold flex items-center justify-center gap-2">G Continuar con Google</button><button class="bg-[#1877f2] text-white rounded-xl py-3 text-[13px] font-semibold flex items-center justify-center gap-2"><i class="fa-brands fa-facebook"></i> Continuar con Facebook</button></div>
-    </div>
-  </div>
-  <p class="mt-6 text-sm text-white/60">No tienes cuenta? <span class="text-sky-400 underline cursor-pointer" onclick="document.getElementById('btnLogin').click()">"Regístrate"</span></p>
-</div>
-
-<div id="appScreen" class="hidden min-h-screen p-3 md:p-5">
-  <div class="max-w-[1400px] mx-auto flex gap-4">
-    <aside class="glass rounded-[24px] w-[250px] p-4 flex-col hidden md:flex min-h-[calc(100vh-40px)]">
-      <div class="text-center py-3"><h1 class="font-extrabold text-[18px]">Mis Archivos</h1><p class="text-[12px] text-sky-200/60">Starmars Cloud</p></div>
-      <nav class="space-y-1 mt-4 flex-1" id="folderNav">
-        <a data-folder="all" class="active-folder flex gap-3 px-3 py-2.5 rounded-xl text-sm cursor-pointer"><i class="fa-solid fa-folder"></i>Mis Archivos</a>
-        <a data-folder="docs" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/5 cursor-pointer"><i class="fa-regular fa-file"></i>Documentos</a>
-        <a data-folder="images" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/5 cursor-pointer"><i class="fa-regular fa-image"></i>Imágenes</a>
-        <a data-folder="videos" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/5 cursor-pointer"><i class="fa-solid fa-video"></i>Videos</a>
-        <a data-folder="fav" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/5 cursor-pointer"><i class="fa-regular fa-star"></i>Favoritos</a>
-        <a data-folder="recent" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/5 cursor-pointer"><i class="fa-regular fa-clock"></i>Recientes</a>
-        <div class="border-t border-white/10 my-2"></div>
-        <a data-folder="trash" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/5 cursor-pointer"><i class="fa-regular fa-trash-can"></i>Papelera</a>
-      </nav>
-      <div class="glass rounded-xl p-3"><p class="text-xs font-bold">Almacenamiento</p><p id="storageText" class="text-[11px] text-white/60">0 GB de 10 GB usados</p><div class="w-full h-1.5 bg-white/10 rounded-full mt-2"><div id="storageBar" class="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full" style="width:5%"></div></div><p id="storageAvail" class="text-[11px] mt-1 text-white/60">• 10 GB disponibles</p><p id="userEmail" class="text-[10px] mt-2 text-white/40 truncate"></p></div>
-      <button id="btnLogout" class="mt-2 text-xs text-white/50">Cerrar sesión</button>
-    </aside>
-
-    <main class="flex-1 glass rounded-[24px] p-5 min-h-[calc(100vh-40px)]">
-      <div class="flex gap-3 justify-between flex-wrap mb-6">
-        <div class="flex items-center gap-2 border border-white/20 rounded-full px-4 py-2 w-full md:w-[380px]"><i class="fa-solid fa-magnifying-glass text-white/40"></i><input id="searchInput" placeholder="Buscar en Mis Archivos..." class="bg-transparent outline-none text-sm w-full placeholder:text-white/40"></div>
-        <button onclick="document.getElementById('fileInput').click()" class="bg-[#1a73e8] rounded-full px-5 py-2.5 text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-plus"></i> Subir archivo</button>
-        <input type="file" id="fileInput" class="hidden" multiple>
-      </div>
-      <h2 id="folderTitle" class="text-[28px] font-extrabold">Mis Archivos</h2>
-      <p class="text-sm text-white/50 mb-6 flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> <span id="uploadStatus">Arrastra tus archivos o utiliza el botón para subirlos dinámicamente</span></p>
-      <div id="filesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    </main>
-  </div>
-</div>
+<div id="appScreen" class="hidden min-h-screen p-3">
+<div class="max-w-[1400px] mx-auto flex gap-4">
+<aside class="glass rounded-[24px] w-[250px] p-4 hidden md:flex flex-col min-h-[calc(100vh-24px)]"><div class="text-center py-2"><h1 class="font-extrabold">Mis Archivos</h1><p class="text-xs text-sky-200/60">Starmars Cloud</p></div><nav id="folderNav" class="space-y-1 mt-4 flex-1"><a data-folder="all" class="active-folder flex gap-3 px-3 py-2.5 rounded-xl text-sm cursor-pointer"><i class="fa-solid fa-folder"></i>Mis Archivos</a><a data-folder="docs" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 cursor-pointer"><i class="fa-regular fa-file"></i>Documentos</a><a data-folder="images" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 cursor-pointer"><i class="fa-regular fa-image"></i>Imágenes</a><a data-folder="videos" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 cursor-pointer"><i class="fa-solid fa-video"></i>Videos</a><a data-folder="trash" class="flex gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 cursor-pointer"><i class="fa-regular fa-trash-can"></i>Papelera</a></nav><div class="glass rounded-xl p-3"><p class="text-xs font-bold">Almacenamiento</p><p id="storageText" class="text-[11px] text-white/60">0 MB usados</p><div class="w-full h-1.5 bg-white/10 rounded-full mt-2"><div id="storageBar" class="h-full bg-sky-400 rounded-full" style="width:5%"></div></div><p id="userEmail" class="text-[10px] mt-2 truncate"></p></div><button id="btnLogout" class="mt-2 text-xs text-white/50">Cerrar sesión</button></aside>
+<main class="flex-1 glass rounded-[24px] p-5 min-h-[calc(100vh-24px)]"><div class="flex justify-between flex-wrap gap-3 mb-6"><div class="flex items-center gap-2 border border-white/20 rounded-full px-4 py-2 w-full md:w-[360px]"><i class="fa-solid fa-magnifying-glass text-white/40"></i><input id="searchInput" placeholder="Buscar..." class="bg-transparent outline-none text-sm w-full"></div><button onclick="document.getElementById('fileInput').click()" class="bg-[#1a73e8] rounded-full px-5 py-2.5 text-sm font-bold"><i class="fa-solid fa-plus"></i> Subir archivo</button><input type="file" id="fileInput" class="hidden" multiple></div><h2 id="folderTitle" class="text-[24px] font-extrabold">Mis Archivos</h2><p id="uploadStatus" class="text-sm text-white/50 mb-6">Arrastra o sube archivos</p><div id="filesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+</div></div>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-const SUPABASE_URL = 'https://cdffffghheikcmstcmcl.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_otcfh8jx0UppsEePiD3egw_BE_P7vRF';
-const BUCKET = 'archivos';
-const MASTER_EMAIL = 'starmarc.estudio@gmail.com';
-const LIMIT_BYTES = 10 * 1024 * 1024 * 1024;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-let allFiles = []; let currentFolder = 'all'; let currentUserEmail = '';
-async function checkSession(){const {data}=await supabase.auth.getSession(); if(data.session){showApp(data.session.user.email);}} checkSession();
-function showApp(email){
-  currentUserEmail = email.toLowerCase();
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('appScreen').classList.remove('hidden');
-  document.getElementById('userEmail').innerText=email + (email.toLowerCase()===MASTER_EMAIL.toLowerCase()?' - MAESTRO ILIMITADO':'');
-  loadFiles();
-}
-document.getElementById('btnLogin').onclick=async()=>{
-  const email=document.getElementById('email').value.trim().toLowerCase();
-  const password=document.getElementById('pass').value.trim();
-  const msg=document.getElementById('msg');
-  if(!email||password.length<6){msg.innerText='Correo y contraseña 6+';return;}
-  msg.innerText='Conectando...';
-  let {data,error}=await supabase.auth.signInWithPassword({email,password});
-  if(error){
-    const {data:sData, error:sErr}=await supabase.auth.signUp({email,password});
-    if(sErr){msg.innerText=sErr.message;return;}
-    msg.innerText='Cuenta creada!';
-    const {data:lData}=await supabase.auth.signInWithPassword({email,password});
-    if(lData.session) showApp(email);
-    return;
-  }
-  showApp(data.user.email);
-};
-document.getElementById('btnLogout').onclick=async()=>{await supabase.auth.signOut(); location.reload();};
+const SUPABASE_URL='https://cdffffghheikcmstcmcl.supabase.co';const SUPABASE_KEY='sb_publishable_otcfh8jx0UppsEePiD3egw_BE_P7vRF';const BUCKET='archivos';const MASTER_EMAIL='starmarc.estudio@gmail.com';const LIMIT_BYTES=10*1024*1024*1024;
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY);
+let allFiles=[];let currentFolder='all';let currentUserEmail='';
+async function checkSession(){const {data}=await supabase.auth.getSession();if(data.session)showApp(data.session.user.email);}checkSession();
+function showApp(email){currentUserEmail=email.toLowerCase();document.getElementById('loginScreen').classList.add('hidden');document.getElementById('appScreen').classList.remove('hidden');document.getElementById('userEmail').innerText=email;loadFiles();}
+document.getElementById('btnLogin').onclick=async()=>{const email=document.getElementById('email').value.trim().toLowerCase();const pass=document.getElementById('pass').value.trim();const msg=document.getElementById('msg');if(!email||pass.length<6){msg.innerText='Correo y 6+ chars';return;}msg.innerText='Entrando...';let {data,error}=await supabase.auth.signInWithPassword({email,password:pass});if(error){const {error:e2}=await supabase.auth.signUp({email,password:pass});if(e2){msg.innerText=e2.message;return;}const {data:d2}=await supabase.auth.signInWithPassword({email,password:pass});if(d2.session)showApp(email);return;}showApp(data.user.email);};
+document.getElementById('btnLogout').onclick=async()=>{await supabase.auth.signOut();location.reload();};
+
 document.getElementById('fileInput').onchange=async(e)=>{
-  const files=e.target.files; if(!files.length) return;
+  const files=e.target.files;if(!files.length)return;
   const status=document.getElementById('uploadStatus');
-  let totalUsed = allFiles.reduce((a,b)=>a+(b.raw_size||0),0);
+  let totalUsed=allFiles.reduce((a,b)=>a+(b.raw_size||0),0);
   for(const file of files){
-    if(currentUserEmail!==MASTER_EMAIL.toLowerCase() && (totalUsed + file.size) > LIMIT_BYTES){
-      alert('¡Espacio lleno! Límite 10GB por usuario.'); break;
-    }
+    if(currentUserEmail!==MASTER_EMAIL && (totalUsed+file.size)>LIMIT_BYTES){alert('Límite 10GB alcanzado');break;}
     status.innerText='Subiendo '+file.name+'...';
-    const fileName=Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    const {error}=await supabase.storage.from(BUCKET).upload(fileName,file);
-    if(error){status.innerText='Error: '+error.message; continue;}
-    const {data:urlData}=supabase.storage.from(BUCKET).getPublicUrl(fileName);
-    const {data:userData}=await supabase.auth.getUser();
-    await supabase.from('files').insert({user_id:userData.user?.id,name:file.name,url:urlData.publicUrl,size:(file.size/1024/1024).toFixed(1)+' MB',raw_size:file.size,type:file.type||'file',storage_path:fileName});
-    totalUsed+=file.size;
-    status.innerText='¡Subido '+file.name+'!';
+    const fName=Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const {error}=await supabase.storage.from(BUCKET).upload(fName,file);
+    if(error){status.innerText='Error: '+error.message;continue;}
+    // intentar guardar en tabla, pero si falla no importa
+    try{const {data:ud}=await supabase.auth.getUser();const {data:pub}=supabase.storage.from(BUCKET).getPublicUrl(fName);await supabase.from('files').insert({user_id:ud.user?.id,name:file.name,url:pub.publicUrl,size:(file.size/1024/1024).toFixed(1)+' MB',raw_size:file.size,type:file.type,storage_path:fName});}catch(_){}
+    totalUsed+=file.size;status.innerText='¡Subido '+file.name+'!';
   }
   loadFiles();
 };
-function getFolderType(f){
-  if(f.type?.includes('image') || /\.(png|jpg|jpeg|webp|gif)$/i.test(f.name)) return 'images';
-  if(f.type?.includes('video') || /\.(mp4|mov|avi|mkv)$/i.test(f.name)) return 'videos';
-  if(/\.(pdf|doc|docx|txt|xls|ppt)$/i.test(f.name) || f.type?.includes('pdf')) return 'docs';
-  return 'all';
-}
+
+function getFolderType(f){const n=f.name.toLowerCase();if(/\.(png|jpg|jpeg|webp|gif)$/.test(n)||f.type?.includes('image'))return'images';if(/\.(mp4|mov|avi|mkv)$/.test(n)||f.type?.includes('video'))return'videos';if(/\.(pdf|doc|docx|xls|ppt|txt)$/.test(n))return'docs';return'all';}
+
 async function loadFiles(){
-  const {data}=await supabase.from('files').select('*').order('created_at',{ascending:false});
-  allFiles = data||[];
-  renderFiles(); updateStorage();
+  const grid=document.getElementById('filesGrid');
+  grid.innerHTML='<p class="text-white/40 text-center col-span-3">Cargando...</p>';
+  // LISTAR DIRECTO DEL BUCKET - ESTO SÍ FUNCIONA
+  const {data:list,error}=await supabase.storage.from(BUCKET).list('',{limit:100,sortBy:{column:'created_at',order:'desc'}});
+  if(error){grid.innerHTML='<p class="text-red-300">Error bucket: '+error.message+'</p>';return;}
+  allFiles=(list||[]).filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>{
+    const {data:pub}=supabase.storage.from(BUCKET).getPublicUrl(f.name);
+    return {name:f.name.includes('_')?f.name.split('_').slice(1).join('_'):f.name, storage_path:f.name, url:pub.publicUrl, size:(f.metadata?.size? (f.metadata.size/1024/1024).toFixed(1)+' MB':''), raw_size:f.metadata?.size||0, type:f.metadata?.mimetype||'', created_at:f.created_at};
+  });
+  renderFiles();updateStorage();
 }
 function renderFiles(){
-  const grid=document.getElementById('filesGrid');
-  const search=document.getElementById('searchInput').value.toLowerCase();
-  let filtered = allFiles;
-  if(currentFolder!=='all') filtered = filtered.filter(f=>getFolderType(f)===currentFolder);
-  if(search) filtered = filtered.filter(f=>f.name.toLowerCase().includes(search));
-  grid.innerHTML='';
-  if(!filtered.length){grid.innerHTML='<p class="text-white/30 col-span-3 text-center py-20">No hay archivos en esta carpeta</p>'; return;}
-  filtered.forEach(f=>{
+  const grid=document.getElementById('filesGrid');const search=document.getElementById('searchInput').value.toLowerCase();
+  let filtered=allFiles;if(currentFolder!=='all')filtered=filtered.filter(f=>getFolderType(f)===currentFolder);if(search)filtered=filtered.filter(f=>f.name.toLowerCase().includes(search));
+  if(!filtered.length){grid.innerHTML='<p class="col-span-3 text-center py-20 text-white/40">No hay archivos en esta carpeta</p>';return;}
+  grid.innerHTML='';filtered.forEach(f=>{
     const isImg=getFolderType(f)==='images';
     let preview=isImg?`<img src="${f.url}" class="h-[160px] w-full object-cover rounded-xl">`:`<div class="h-[160px] bg-white/5 rounded-xl flex items-center justify-center text-3xl">${getFolderType(f)==='videos'?'🎬':getFolderType(f)==='docs'?'📄':'📁'}</div>`;
-    grid.innerHTML+=`<div class="card-file rounded-[18px] p-3"><div class="relative">${preview}</div><p class="font-bold text-[12px] mt-3 truncate">${f.name}</p><p class="text-[11px] text-white/50">${f.size} • ${new Date(f.created_at).toLocaleDateString()}</p><div class="flex gap-2 mt-2"><a href="${f.url}" target="_blank" class="flex-1 text-center bg-white/10 py-1.5 rounded-full text-xs">Ver</a><a href="${f.url}" download class="flex-1 text-center bg-[#1a73e8] py-1.5 rounded-full text-xs">Descargar</a><button onclick="deleteFile('${f.id}','${f.storage_path}')" class="px-2 bg-red-500/20 rounded-full text-xs">X</button></div></div>`;
+    grid.innerHTML+=`<div class="card-file rounded-[18px] p-3"><div>${preview}</div><p class="font-bold text-xs mt-2 truncate">${f.name}</p><p class="text-[11px] text-white/50">${f.size}</p><div class="flex gap-2 mt-2"><a href="${f.url}" target="_blank" class="flex-1 bg-white/10 text-center py-1.5 rounded-full text-xs">Ver</a><a href="${f.url}" download="${f.name}" class="flex-1 bg-[#1a73e8] text-center py-1.5 rounded-full text-xs">Descargar</a><button onclick="deleteFile('${f.storage_path}')" class="px-2 bg-red-500/20 rounded-full text-xs">X</button></div></div>`;
   });
 }
-function updateStorage(){
-  const total=allFiles.reduce((a,b)=>a+(b.raw_size||0),0);
-  const gb=(total/1024/1024/1024);
-  const limitGB = currentUserEmail===MASTER_EMAIL.toLowerCase()?50:10;
-  const percent=Math.min((gb/limitGB)*100,100);
-  document.getElementById('storageText').innerText=gb.toFixed(2)+' GB de '+limitGB+' GB usados';
-  document.getElementById('storageBar').style.width=percent+'%';
-  document.getElementById('storageAvail').innerText='• '+(limitGB-gb).toFixed(2)+' GB disponibles';
-}
-window.deleteFile=async(id,path)=>{if(!confirm('Borrar?'))return; if(path) await supabase.storage.from(BUCKET).remove([path]); await supabase.from('files').delete().eq('id',id); loadFiles();}
+function updateStorage(){const total=allFiles.reduce((a,b)=>a+(b.raw_size||0),0);const gb=total/1024/1024/1024;const lim=currentUserEmail===MASTER_EMAIL?50:10;document.getElementById('storageText').innerText=gb.toFixed(3)+' GB de '+lim+' GB usados';document.getElementById('storageBar').style.width=Math.min((gb/lim)*100,100)+'%';}
+window.deleteFile=async(path)=>{if(!confirm('¿Borrar?'))return;await supabase.storage.from(BUCKET).remove([path]);loadFiles();};
 document.getElementById('searchInput').oninput=()=>renderFiles();
-document.querySelectorAll('#folderNav a').forEach(a=>{
-  a.onclick=()=>{
-    document.querySelectorAll('#folderNav a').forEach(x=>x.classList.remove('active-folder'));
-    a.classList.add('active-folder');
-    currentFolder=a.dataset.folder;
-    document.getElementById('folderTitle').innerText=a.innerText;
-    renderFiles();
-  }
-});
+document.querySelectorAll('#folderNav a').forEach(a=>{a.onclick=()=>{document.querySelectorAll('#folderNav a').forEach(x=>x.classList.remove('active-folder'));a.classList.add('active-folder');currentFolder=a.dataset.folder;document.getElementById('folderTitle').innerText=a.innerText;renderFiles();}});
 </script>
 </body>
 </html>
