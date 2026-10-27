@@ -2,118 +2,58 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>STARMARC MOBILE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STARMARC CLOUD OPS - ADMIN REAL</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
-*{font-family:'Space Grotesk',system-ui}
-body{background:#06060a;color:#fff;overflow-x:hidden}
-.glass{background:rgba(18,18,26,.85);backdrop-filter:blur(20px);border:1px solid rgba(124,58,237,.25)}
-.card{border:1px solid rgba(124,58,237,.35);background:linear-gradient(145deg,#15151f 0%,#0e0e17 100%);box-shadow:0 4px 30px rgba(124,58,237,.15)}
-.pill{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3)}
-.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="pb-24">
+<body class="bg-[#06060a] text-white p-6 font-mono">
+<h1 class="text-2xl font-bold mb-6">STARMARC CLOUD OPS - DATOS REALES</h1>
 
-<!-- HEADER MOBILE -->
-<div class="sticky top-0 z-20 glass px-4 py-3 flex justify-between items-center">
-  <div class="flex items-center gap-3">
-    <div class="w-9 h-9 rounded-[10px] bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30"><i class="fa-solid fa-bolt text-sm"></i></div>
-    <div><p class="font-bold text-[15px] leading-none tracking-tight">STARMARC</p><p class="text-[10px] text-violet-300/70 font-semibold tracking-widest">CLOUD OPS • ADMIN</p></div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-zinc-900 p-4 rounded-xl border border-purple-500/30">
+    <p class="text-xs opacity-60">Total Users</p>
+    <p id="total-users" class="text-2xl font-bold">...</p>
   </div>
-  <div class="flex items-center gap-3">
-    <div class="w-8 h-8 rounded-full bg-[#1e1e2a] flex items-center justify-center"><i class="fa-solid fa-magnifying-glass text-xs text-zinc-400"></i></div>
-    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[11px] font-bold">SA</div>
+  <div class="bg-zinc-900 p-4 rounded-xl border border-purple-500/30">
+    <p class="text-xs opacity-60">Total Files</p>
+    <p id="total-files" class="text-2xl font-bold">...</p>
   </div>
-</div>
-
-<div class="p-4 space-y-4">
-
-  <!-- WELCOME -->
-  <div>
-    <h1 class="text-xl font-bold">Hola, Admin <span class="text-violet-400">👋</span></h1>
-    <p class="text-xs text-zinc-500 mt-0.5">Gestiona todo tu cloud desde aquí</p>
+  <div class="bg-zinc-900 p-4 rounded-xl border border-purple-500/30">
+    <p class="text-xs opacity-60">Status</p>
+    <p class="text-green-400 font-bold">Operational</p>
   </div>
-
-  <!-- STATS 2x2 MOBILE PERFECT -->
-  <div class="grid grid-cols-2 gap-3">
-    <div class="card rounded-[20px] p-4">
-      <div class="flex justify-between items-start mb-2"><div class="w-9 h-9 rounded-xl bg-violet-500/15 flex items-center justify-center"><i class="fa-solid fa-users text-violet-400 text-sm"></i></div><span class="text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">+12%</span></div>
-      <p class="text-[11px] text-zinc-500">Total Users</p><p class="text-[28px] font-bold leading-none mt-1">1,284</p>
-    </div>
-    <div class="card rounded-[20px] p-4">
-      <div class="flex justify-between items-start mb-2"><div class="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center"><i class="fa-solid fa-file-lines text-blue-400 text-sm"></i></div><span class="text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">+248</span></div>
-      <p class="text-[11px] text-zinc-500">Total Files</p><p class="text-[28px] font-bold leading-none mt-1">9,473</p>
-    </div>
-    <div class="card rounded-[20px] p-4">
-      <div class="flex justify-between items-start mb-2"><div class="w-9 h-9 rounded-xl bg-fuchsia-500/15 flex items-center justify-center"><i class="fa-solid fa-folder text-fuchsia-400 text-sm"></i></div><span class="text-[10px] text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded-full">+5 new</span></div>
-      <p class="text-[11px] text-zinc-500">Folders</p><p class="text-[28px] font-bold leading-none mt-1">312</p>
-    </div>
-    <div class="card rounded-[20px] p-4 border-emerald-500/20">
-      <div class="flex justify-between items-start mb-2"><div class="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center"><i class="fa-solid fa-heart-pulse text-emerald-400 text-sm"></i></div><div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div></div>
-      <p class="text-[11px] text-zinc-500">Status</p><p class="text-[15px] font-bold text-emerald-400 leading-none mt-1">Operational</p><p class="text-[10px] text-zinc-600 mt-1">99.98% uptime</p>
-    </div>
-  </div>
-
-  <!-- STORAGE BAR -->
-  <div class="card rounded-[18px] p-3 flex items-center justify-between">
-    <div class="flex-1"><p class="text-[11px] text-zinc-400">Cloud Storage • 72% usado</p><div class="h-2 bg-zinc-800 rounded-full mt-2 overflow-hidden"><div class="h-full w-[72%] bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full"></div></div></div>
-    <p class="text-xs font-bold ml-4">2.4 / 3.5 TB</p>
-  </div>
-
-  <!-- USER FOLDERS - SCROLL HORIZONTAL MOBILE -->
-  <div>
-    <div class="flex justify-between items-center mb-2"><h2 class="font-bold text-sm">User Folders</h2><button class="text-[11px] text-violet-400">Ver todo →</button></div>
-    <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-      <div class="min-w-[140px] card rounded-2xl p-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 mb-2 flex items-center justify-center"><i class="fa-solid fa-user"></i></div><p class="text-xs font-bold">Alex Morgan</p><p class="text-[10px] text-zinc-500">24 items</p></div>
-      <div class="min-w-[140px] card rounded-2xl p-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 mb-2 flex items-center justify-center"><i class="fa-solid fa-palette"></i></div><p class="text-xs font-bold">Design Team</p><p class="text-[10px] text-zinc-500">42 items</p></div>
-      <div class="min-w-[140px] card rounded-2xl p-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 mb-2 flex items-center justify-center"><i class="fa-solid fa-chart-line"></i></div><p class="text-xs font-bold">Marketing</p><p class="text-[10px] text-zinc-500">18 items</p></div>
-      <div class="min-w-[140px] card rounded-2xl p-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 mb-2 flex items-center justify-center"><i class="fa-solid fa-code"></i></div><p class="text-xs font-bold">DevOps</p><p class="text-[10px] text-zinc-500">56 items</p></div>
-    </div>
-  </div>
-
-  <!-- RECENT FILES - TARJETAS MOBILE -->
-  <div>
-    <div class="flex justify-between items-center mb-3"><h2 class="font-bold text-sm">Recent Files</h2><div class="flex gap-2"><button class="pill px-3 py-1.5 rounded-full text-[11px]"><i class="fa-solid fa-filter mr-1"></i>Filter</button></div></div>
-    
-    <div class="space-y-2.5">
-      <div class="card rounded-2xl p-3 flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-violet-500/20 flex items-center justify-center"><i class="fa-brands fa-figma text-violet-400"></i></div>
-        <div class="flex-1 min-w-0"><p class="text-xs font-bold truncate">Brand_Kit_v3.fig</p><p class="text-[10px] text-zinc-500">12.4 MB • Hoy 14:32 • Alex M.</p></div>
-        <button class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center"><i class="fa-solid fa-ellipsis text-xs"></i></button>
-      </div>
-      <div class="card rounded-2xl p-3 flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-red-500/15 flex items-center justify-center"><i class="fa-solid fa-file-pdf text-red-400"></i></div>
-        <div class="flex-1 min-w-0"><p class="text-xs font-bold truncate">Project_Proposal.pdf</p><p class="text-[10px] text-zinc-500">4.2 MB • Ayer 09:12</p></div>
-        <button class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center"><i class="fa-solid fa-ellipsis text-xs"></i></button>
-      </div>
-      <div class="card rounded-2xl p-3 flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-green-500/15 flex items-center justify-center"><i class="fa-solid fa-file-excel text-green-400"></i></div>
-        <div class="flex-1 min-w-0"><p class="text-xs font-bold truncate">Q1_Report.xlsx</p><p class="text-[10px] text-zinc-500">1.8 MB • Jan 13</p></div>
-        <button class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center"><i class="fa-solid fa-ellipsis text-xs"></i></button>
-      </div>
-      <div class="card rounded-2xl p-3 flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center"><i class="fa-solid fa-image text-blue-400"></i></div>
-        <div class="flex-1 min-w-0"><p class="text-xs font-bold truncate">Product_Photo.png</p><p class="text-[10px] text-zinc-500">8.7 MB • Jan 12</p></div>
-        <button class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center"><i class="fa-solid fa-ellipsis text-xs"></i></button>
-      </div>
-    </div>
+  <div class="bg-zinc-900 p-4 rounded-xl border border-purple-500/30">
+    <p class="text-xs opacity-60">Storage</p>
+    <p id="storage-used" class="text-sm">Conectando...</p>
   </div>
 </div>
 
-<!-- FAB -->
-<button class="fixed bottom-[84px] right-4 w-14 h-14 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center shadow-2xl shadow-violet-600/40 z-20"><i class="fa-solid fa-plus text-lg"></i></button>
+<div id="user-list" class="bg-zinc-900 p-4 rounded-xl">Cargando usuarios reales...</div>
 
-<!-- BOTTOM NAV TIPO APP -->
-<div class="fixed bottom-0 left-0 right-0 glass rounded-t-[24px] px-6 py-3 flex justify-between items-center z-30">
-  <div class="flex flex-col items-center gap-1"><i class="fa-solid fa-house text-violet-400"></i><span class="text-[9px] text-violet-400 font-bold">Home</span></div>
-  <div class="flex flex-col items-center gap-1"><i class="fa-solid fa-folder text-zinc-600"></i><span class="text-[9px] text-zinc-600">Files</span></div>
-  <div class="flex flex-col items-center gap-1"><i class="fa-solid fa-users text-zinc-600"></i><span class="text-[9px] text-zinc-600">Users</span></div>
-  <div class="flex flex-col items-center gap-1"><i class="fa-solid fa-gear text-zinc-600"></i><span class="text-[9px] text-zinc-600">Settings</span></div>
-</div>
+<script>
+  // CONFIGURA AQUI
+  const SUPABASE_URL = 'https://cdffffghheikcmstcmcl.supabase.co';
+  const SUPABASE_ANON_KEY = 'PEGA_AQUI_TU_ANON_KEY_COMPLETA_eyJhbGc...';
 
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function cargar() {
+    // Usuarios
+    const { count: users } = await supabaseClient.from('profiles').select('*', {count:'exact', head:true});
+    if(users !== null) document.getElementById('total-users').innerText = users;
+
+    // Archivos
+    const { count: files } = await supabaseClient.from('archivos').select('*', {count:'exact', head:true});
+    if(files !== null) document.getElementById('total-files').innerText = files;
+
+    // Lista real de usuarios
+    const { data } = await supabaseClient.from('profiles').select('full_name, email').limit(10);
+    if(data){
+      document.getElementById('user-list').innerHTML = '<h3 class="font-bold mb-2">User Folders Reales</h3>' + data.map(u=> `<div class="py-2 border-b border-zinc-800">${u.full_name || u.email}</div>`).join('');
+    }
+  }
+  cargar();
+</script>
 </body>
 </html>
