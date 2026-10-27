@@ -1,40 +1,37 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STARMARC ADMIN</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-black text-white p-3">
-<h1 class="font-bold">STARMARC CLOUD - ADMIN REAL</h1>
-<p id="status" class="text-xs text-yellow-400 mt-2">Conectando...</p>
-<div id="stats" class="grid grid-cols-3 gap-2 mt-3 text-xs"></div>
-<div id="folders" class="mt-4"></div>
-<div id="files" class="mt-4"></div>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>STARMARC ADMIN</title><script src="https://cdn.tailwindcss.com"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
+<body class="bg-black text-white p-4">
+<h1 class="font-bold text-lg">STARMARC ADMIN - REAL</h1>
+<p id="status" class="text-yellow-400 text-sm mt-2">Conectando...</p>
+<div id="list" class="mt-4"></div>
 <script>
-const URL="https://cdffffgheikcmstcmcl.supabase.co";
-const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY";
-const supa=supabase.createClient(URL,KEY);
-async function load(){
+const supa=supabase.createClient("https://cdffffgheikcmstcmcl.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY");
+async function go(){
  try{
-  document.getElementById('status').innerText='Probando storage...';
+  document.getElementById('status').innerText='Listando carpetas...';
   const {data,error}=await supa.storage.from('archivos').list('',{limit:100});
-  if(error){document.getElementById('status').innerText='ERROR REAL: '+JSON.stringify(error); return;}
-  document.getElementById('status').innerText='CONECTADO OK - '+data.length+' items';
+  if(error){document.getElementById('status').innerText='ERROR: '+error.message; return;}
+  document.getElementById('status').innerText='Conectado OK - '+data.length+' carpetas';
   let html='';
-  let totalFiles=0;
   for(let f of data){
-   if(f.id===null){ // folder
-    const {data:sub}=await supa.storage.from('archivos').list(f.name,{limit:100});
-    totalFiles+=sub.length;
-    html+=`<div class="bg-zinc-800 p-2 rounded mt-2"><b>📁 ${f.name}</b> - ${sub.length} archivos<br>`;
-    for(let s of sub){html+=`<div class="ml-4 text-[11px]">📄 ${s.name} <a class="text-blue-400" target="_blank" href="${URL}/storage/v1/object/public/archivos/${f.name}/${s.name}">Link</a></div>`}
-    html+=`</div>`;
+   if(f.name){
+    html+=`<div class="bg-zinc-900 p-3 rounded mt-2"><b>📁 ${f.name}</b> <button onclick="ver('${f.name}')" class="bg-blue-600 px-2 py-1 rounded ml-2 text-xs">Ver archivos</button><div id="c-${f.name}" class="mt-2"></div></div>`;
    }
   }
-  document.getElementById('stats').innerHTML=`<div class="bg-zinc-800 p-2 rounded">Users<br><b>${data.filter(x=>x.id===null).length}</b></div><div class="bg-zinc-800 p-2 rounded">Files<br><b>${totalFiles}</b></div><div class="bg-zinc-800 p-2 rounded">Status<br><b class="text-green-400">Connected</b></div>`;
-  document.getElementById('folders').innerHTML=html;
- }catch(e){document.getElementById('status').innerText='EXCEPTION: '+e.message}
+  document.getElementById('list').innerHTML=html;
+ }catch(e){document.getElementById('status').innerText='FALLÓ: '+e.message}
 }
-load();
+async function ver(carpeta){
+ const d=document.getElementById('c-'+carpeta);
+ d.innerHTML='Cargando...';
+ const {data}=await supa.storage.from('archivos').list(carpeta,{limit:100});
+ let h='';
+ for(let f of data){ 
+  let url=`https://cdffffgheikcmstcmcl.supabase.co/storage/v1/object/public/archivos/${carpeta}/${f.name}`;
+  h+=`<div class="text-xs mt-1">📄 <a href="${url}" target="_blank" class="text-blue-400 underline">${f.name}</a> - <a href="${url}" target="_blank" class="text-green-400">Ver</a></div>`;
+ }
+ d.innerHTML=h||'Vacía';
+}
+go();
 </script>
 </body></html>
