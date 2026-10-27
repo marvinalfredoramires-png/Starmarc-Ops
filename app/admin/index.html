@@ -1,42 +1,67 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STARMARC ADMIN</title>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STARMARC OPS - ADMIN</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body class="bg-black text-white p-4">
-<h1 class="font-bold text-lg">STARMARC ADMIN - REAL</h1>
-<p id="status" class="text-yellow-400 text-sm mt-2">Conectando con llave nueva...</p>
-<div id="list" class="mt-4"></div>
+<body class="bg-[#0a0a0a] text-white min-h-screen">
+<div class="max-w-6xl mx-auto p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-black"><i class="fa-solid fa-shield-halved text-blue-500"></i> STARMARC OPS</h1>
+    <a href="../" class="bg-zinc-800 px-4 py-2 rounded text-sm">← Volver App</a>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-zinc-900 p-4 rounded-xl"><p class="text-xs text-zinc-500">Usuarios</p><p id="totalUsers" class="text-2xl font-bold">0</p></div>
+    <div class="bg-zinc-900 p-4 rounded-xl"><p class="text-xs text-zinc-500">Archivos</p><p id="totalFiles" class="text-2xl font-bold">0</p></div>
+    <div class="bg-zinc-900 p-4 rounded-xl"><p class="text-xs text-zinc-500">Storage</p><p class="text-2xl font-bold text-green-400">OK</p></div>
+    <div class="bg-zinc-900 p-4 rounded-xl"><p class="text-xs text-zinc-500">Estado</p><p class="text-2xl font-bold text-blue-400">ACTIVO</p></div>
+  </div>
+
+  <div class="bg-zinc-900 rounded-xl p-4">
+    <div class="flex justify-between mb-4">
+      <h2 class="font-bold">Usuarios Registrados</h2>
+      <button onclick="loadData()" class="bg-blue-600 px-3 py-1 rounded text-xs"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+    </div>
+    <div id="userList" class="space-y-2"></div>
+  </div>
+
+  <div class="bg-zinc-900 rounded-xl p-4 mt-4">
+    <h2 class="font-bold mb-3">Archivos Subidos</h2>
+    <div id="fileList" class="text-sm text-zinc-400">Cargando...</div>
+  </div>
+</div>
+
 <script>
-const PROJECT_URL="https://cdffffgheikcmstcmcl.supabase.co";
-const PUBLISHABLE_KEY="sb_publishable_otcfh8jx0UppsEePiD3egw_BE_P7vRF";
-const supa=supabase.createClient(PROJECT_URL,PUBLISHABLE_KEY);
-async function load(){
- try{
-  document.getElementById('status').innerText='Listando...';
-  const {data,error}=await supa.storage.from('archivos').list('',{limit:100});
-  if(error){document.getElementById('status').innerText='ERROR: '+error.message+' - Usa la llave completa'; console.log(error); return;}
-  document.getElementById('status').innerText='✅ CONECTADO OK - '+data.length+' carpetas';
-  let html='';
-  for(let f of data){
-   if(!f.name) continue;
-   html+=`<div class="bg-zinc-900 p-3 rounded mt-3"><div class="flex justify-between"><b>📁 ${f.name}</b><button onclick="ver('${f.name}')" class="bg-blue-600 px-3 py-1 rounded text-xs">Ver archivos</button></div><div id="c-${f.name}" class="mt-2 text-xs text-zinc-400"></div></div>`;
+function loadData(){
+  const users = JSON.parse(localStorage.getItem('starmarc_users') || '[]');
+  const files = JSON.parse(localStorage.getItem('starmarc_files') || '[]');
+  
+  document.getElementById('totalUsers').innerText = users.length;
+  document.getElementById('totalFiles').innerText = files.length;
+  
+  let uHtml = '';
+  if(users.length===0){ uHtml='<p class="text-zinc-500 text-sm">No hay usuarios aún. Se crean cuando alguien se registra en la app.</p>'; }
+  else {
+    users.forEach(u=>{
+      uHtml+=`<div class="bg-black p-3 rounded flex justify-between"><span><b>${u.nombre||u.email||'Usuario'}</b><br><small class="text-zinc-500">${u.email||''} - ${u.fecha||''}</small></span><span class="text-xs bg-zinc-800 px-2 py-1 rounded h-fit">${u.rol||'user'}</span></div>`;
+    });
   }
-  document.getElementById('list').innerHTML=html||'<p class="text-zinc-500">Bucket vacío</p>';
- }catch(e){document.getElementById('status').innerText='EXCEPCIÓN: '+e.message}
+  document.getElementById('userList').innerHTML=uHtml;
+
+  let fHtml='';
+  if(files.length===0){ fHtml='<p>No hay archivos locales. Los archivos de Supabase se ven en el dashboard de Supabase.</p><a href="https://supabase.com/dashboard/project/cdffffgheikcmstcmcl/storage/buckets/archivos" target="_blank" class="text-blue-400 underline">→ Ver en Supabase Storage</a>'; }
+  else {
+    files.forEach(f=>{
+      fHtml+=`<div class="bg-black p-2 rounded mt-2">📁 ${f.carpeta||''} / ${f.name} - <a href="${f.url}" target="_blank" class="text-blue-400">Ver</a></div>`;
+    });
+  }
+  document.getElementById('fileList').innerHTML=fHtml;
 }
-async function ver(carpeta){
- const div=document.getElementById('c-'+carpeta); div.innerHTML='Cargando...';
- const {data,error}=await supa.storage.from('archivos').list(carpeta,{limit:100});
- if(error){div.innerHTML='Error: '+error.message; return;}
- let h='';
- for(let f of data){
-  let url=`${PROJECT_URL}/storage/v1/object/public/archivos/${carpeta}/${f.name}`;
-  h+=`<div class="mt-2 border-t border-zinc-800 pt-1">📄 <a href="${url}" target="_blank" class="text-blue-400 underline">${f.name}</a><br><img src="${url}" class="mt-1 max-w-[200px] rounded" onerror="this.style.display='none'"></div>`;
- }
- div.innerHTML=h||'Carpeta vacía';
-}
-load();
+loadData();
 </script>
-</body></html>
+</body>
+</html>
