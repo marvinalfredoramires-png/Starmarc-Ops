@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,22 +50,28 @@ document.getElementById('linkRegister').onclick=()=>{isRegisterMode=!isRegisterM
 document.getElementById('btnLogin').onclick=async()=>{const email=document.getElementById('email').value.trim().toLowerCase();const pass=document.getElementById('pass').value.trim();const msg=document.getElementById('msg');if(!email||pass.length<6){msg.innerText='Correo y 6+ caracteres';return;}msg.innerText=isRegisterMode?'Registrando...':'Entrando...';if(isRegisterMode){const {error}=await supabase.auth.signUp({email,password:pass});if(error){msg.innerText=error.message;return;}}const {data,error}=await supabase.auth.signInWithPassword({email,password:pass});if(error){msg.innerText=error.message;return;}const {data:u}=await supabase.auth.getUser();showApp(u.user);};
 document.getElementById('btnGoogle').onclick=async()=>{await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});};
 document.getElementById('btnLogout').onclick=async()=>{await supabase.auth.signOut();location.reload();};
-// SUBIDA PRIVADA POR USUARIO
 document.getElementById('fileInput').onchange=async(e)=>{const files=e.target.files;if(!files.length||!currentUser)return;const status=document.getElementById('uploadStatus');let totalUsed=allFiles.reduce((a,b)=>a+(b.raw_size||0),0);for(const file of files){if(currentUser.email.toLowerCase()!==MASTER_EMAIL && (totalUsed+file.size)>LIMIT_BYTES){alert('Límite 10GB');break;}status.innerText='Subiendo '+file.name+'...';const safeName=Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path=currentUser.id+'/'+safeName;const {error}=await supabase.storage.from(BUCKET).upload(path,file);if(error){status.innerText='Error: '+error.message;continue;}totalUsed+=file.size;}loadFiles();status.innerText='Tus archivos privados';};
 function getFolderType(f){const n=f.name.toLowerCase();if(/\.(png|jpg|jpeg|webp|gif)$/.test(n)||(f.type&&f.type.includes('image')))return'images';if(/\.(mp4|mov|avi|mkv)$/.test(n)||(f.type&&f.type.includes('video')))return'videos';if(/\.(pdf|doc|docx|xls|ppt|txt)$/.test(n))return'docs';return'all';}
 async function loadFiles(){if(!currentUser)return;const grid=document.getElementById('filesGrid');grid.innerHTML='<p class="text-white/40 text-center col-span-3 py-10">Cargando tus archivos privados...</p>';let list,error;
-// Si es tu cuenta principal, muestro archivos viejos (raíz) + tu carpeta nueva
 if(currentUser.email.toLowerCase()===MASTER_EMAIL){
   const {data:d1,error:e1}=await supabase.storage.from(BUCKET).list('',{limit:100,sortBy:{column:'created_at',order:'desc'}});
   const {data:d2}=await supabase.storage.from(BUCKET).list(currentUser.id,{limit:100,sortBy:{column:'created_at',order:'desc'}});
-  let combined=[];if(d1)combined=combined.concat(d1.filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>({...f,fullPath:f.name})));if(d2)combined=combined.concat(d2.filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>({...f,fullPath:currentUser.id+'/'+f.name})));
+  let combined=[];if(d1)combined=combined.concat(d1.filter(f=>f.name!=='.emptyFolderPlaceholder' && f.id).map(f=>({...f,fullPath:f.name})));if(d2)combined=combined.concat(d2.filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>({...f,fullPath:currentUser.id+'/'+f.name})));
   list=combined;error=e1;
 }else{
   const {data,error:err}=await supabase.storage.from(BUCKET).list(currentUser.id,{limit:100,sortBy:{column:'created_at',order:'desc'}});
   list=(data||[]).filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>({...f,fullPath:currentUser.id+'/'+f.name}));error=err;
 }
 if(error){grid.innerHTML='<p class="text-red-300">'+error.message+'</p>';return;}
-allFiles=list.map(f=>{const {data:pub}=supabase.storage.from(BUCKET).getPublicUrl(f.fullPath);let displayName=f.name;if(displayName.includes('_'))displayName=displayName.split('_').slice(1).join('_');return {name:displayName,storage_path:f.fullPath,size:(f.metadata?.size?(f.metadata.size/1024/1024).toFixed(2)+' MB':''),raw_size:f.metadata?.size||0,type:f.metadata?.mimetype||'',url:pub.publicUrl};});renderFiles();updateStorage();}
+let filesWithUrl=[];
+for(const f of list){
+  const {data, error:signErr}=await supabase.storage.from(BUCKET).createSignedUrl(f.fullPath, 3600);
+  if(signErr || !data) continue;
+  let displayName=f.name;if(displayName.includes('_'))displayName=displayName.split('_').slice(1).join('_');
+  filesWithUrl.push({name:displayName,storage_path:f.fullPath,size:(f.metadata?.size?(f.metadata.size/1024/1024).toFixed(2)+' MB':''),raw_size:f.metadata?.size||0,type:f.metadata?.mimetype||'',url:data.signedUrl});
+}
+allFiles=filesWithUrl;
+renderFiles();updateStorage();}
 function renderFiles(){const grid=document.getElementById('filesGrid');const search=document.getElementById('searchInput').value.toLowerCase();let filtered=allFiles;if(currentFolder!=='all')filtered=filtered.filter(f=>getFolderType(f)===currentFolder);if(search)filtered=filtered.filter(f=>f.name.toLowerCase().includes(search));if(!filtered.length){grid.innerHTML='<p class="col-span-3 text-center py-20 text-white/40">No tienes archivos aún. ¡Sube el primero!</p>';return;}grid.innerHTML='';filtered.forEach(f=>{const isImg=getFolderType(f)==='images';let preview=isImg?`<img src="${f.url}" class="h-[170px] w-full object-cover rounded-xl">`:`<div class="h-[170px] bg-white/5 rounded-xl flex items-center justify-center text-4xl">${getFolderType(f)==='videos'?'🎬':getFolderType(f)==='docs'?'📄':'📁'}</div>`;grid.innerHTML+=`<div class="card-file rounded-[20px] p-3"><div class="overflow-hidden rounded-xl">${preview}</div><p class="font-bold text-[13px] mt-3 truncate">${f.name}</p><p class="text-[11px] text-white/50">${f.size}</p><div class="flex gap-2 mt-3"><a href="${f.url}" target="_blank" class="flex-1 bg-white/10 text-center py-2 rounded-full text-xs">Ver</a><a href="${f.url}" download class="flex-1 bg-[#1a73e8] text-center py-2 rounded-full text-xs font-bold">Descargar</a><button onclick="deleteFile('${f.storage_path}')" class="w-8 h-8 bg-red-500/20 rounded-full text-xs">X</button></div></div>`;});}
 function updateStorage(){const total=allFiles.reduce((a,b)=>a+(b.raw_size||0),0);const gb=total/1024/1024/1024;const lim=currentUser.email.toLowerCase()===MASTER_EMAIL?50:10;document.getElementById('storageText').innerText=gb.toFixed(3)+' GB de '+lim+' GB';document.getElementById('storageBar').style.width=Math.min((gb/lim)*100,100)+'%';}
 window.deleteFile=async(path)=>{if(!confirm('¿Borrar este archivo?'))return;await supabase.storage.from(BUCKET).remove([path]);loadFiles();};
