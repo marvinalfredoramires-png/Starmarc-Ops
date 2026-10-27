@@ -1,37 +1,42 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>STARMARC ADMIN</title><script src="https://cdn.tailwindcss.com"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STARMARC ADMIN</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+</head>
 <body class="bg-black text-white p-4">
 <h1 class="font-bold text-lg">STARMARC ADMIN - REAL</h1>
-<p id="status" class="text-yellow-400 text-sm mt-2">Conectando...</p>
+<p id="status" class="text-yellow-400 text-sm mt-2">Conectando con llave nueva...</p>
 <div id="list" class="mt-4"></div>
 <script>
-const supa=supabase.createClient("https://cdffffgheikcmstcmcl.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY");
-async function go(){
+const PROJECT_URL="https://cdffffgheikcmstcmcl.supabase.co";
+const PUBLISHABLE_KEY="sb_publishable_otcfh8jx0UppsEePiD3egw_BE_P7vRF";
+const supa=supabase.createClient(PROJECT_URL,PUBLISHABLE_KEY);
+async function load(){
  try{
-  document.getElementById('status').innerText='Listando carpetas...';
+  document.getElementById('status').innerText='Listando...';
   const {data,error}=await supa.storage.from('archivos').list('',{limit:100});
-  if(error){document.getElementById('status').innerText='ERROR: '+error.message; return;}
-  document.getElementById('status').innerText='Conectado OK - '+data.length+' carpetas';
+  if(error){document.getElementById('status').innerText='ERROR: '+error.message+' - Usa la llave completa'; console.log(error); return;}
+  document.getElementById('status').innerText='✅ CONECTADO OK - '+data.length+' carpetas';
   let html='';
   for(let f of data){
-   if(f.name){
-    html+=`<div class="bg-zinc-900 p-3 rounded mt-2"><b>📁 ${f.name}</b> <button onclick="ver('${f.name}')" class="bg-blue-600 px-2 py-1 rounded ml-2 text-xs">Ver archivos</button><div id="c-${f.name}" class="mt-2"></div></div>`;
-   }
+   if(!f.name) continue;
+   html+=`<div class="bg-zinc-900 p-3 rounded mt-3"><div class="flex justify-between"><b>📁 ${f.name}</b><button onclick="ver('${f.name}')" class="bg-blue-600 px-3 py-1 rounded text-xs">Ver archivos</button></div><div id="c-${f.name}" class="mt-2 text-xs text-zinc-400"></div></div>`;
   }
-  document.getElementById('list').innerHTML=html;
- }catch(e){document.getElementById('status').innerText='FALLÓ: '+e.message}
+  document.getElementById('list').innerHTML=html||'<p class="text-zinc-500">Bucket vacío</p>';
+ }catch(e){document.getElementById('status').innerText='EXCEPCIÓN: '+e.message}
 }
 async function ver(carpeta){
- const d=document.getElementById('c-'+carpeta);
- d.innerHTML='Cargando...';
- const {data}=await supa.storage.from('archivos').list(carpeta,{limit:100});
+ const div=document.getElementById('c-'+carpeta); div.innerHTML='Cargando...';
+ const {data,error}=await supa.storage.from('archivos').list(carpeta,{limit:100});
+ if(error){div.innerHTML='Error: '+error.message; return;}
  let h='';
- for(let f of data){ 
-  let url=`https://cdffffgheikcmstcmcl.supabase.co/storage/v1/object/public/archivos/${carpeta}/${f.name}`;
-  h+=`<div class="text-xs mt-1">📄 <a href="${url}" target="_blank" class="text-blue-400 underline">${f.name}</a> - <a href="${url}" target="_blank" class="text-green-400">Ver</a></div>`;
+ for(let f of data){
+  let url=`${PROJECT_URL}/storage/v1/object/public/archivos/${carpeta}/${f.name}`;
+  h+=`<div class="mt-2 border-t border-zinc-800 pt-1">📄 <a href="${url}" target="_blank" class="text-blue-400 underline">${f.name}</a><br><img src="${url}" class="mt-1 max-w-[200px] rounded" onerror="this.style.display='none'"></div>`;
  }
- d.innerHTML=h||'Vacía';
+ div.innerHTML=h||'Carpeta vacía';
 }
-go();
+load();
 </script>
 </body></html>
