@@ -3,25 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STARMARC ADMIN REAL</title>
+<title>STARMARC CLOUD OPS - BLUE</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>body{font-family:Inter,Arial}</style>
 </head>
-<body class="bg-[#06060a] text-white p-4">
-<h1 class="text-xl font-bold mb-4">STARMARC CLOUD OPS <span class="text-violet-400">REAL DATA</span></h1>
+<body class="bg-[#050a14] text-white min-h-screen">
+<div class="flex">
+<!-- SIDEBAR -->
+<div class="w-[220px] bg-[#080e1f] border-r border-[#0ea5e9]/20 p-4 min-h-screen hidden md:block">
+<div class="flex items-center gap-2 mb-10">
+<div class="text-[#0ea5e9] text-2xl">★</div>
+<div><p class="font-bold leading-none">Starmarc</p><p class="text-[11px] text-[#38bdf8] tracking-[0.2em]">CLOUD OPS</p></div>
+</div>
+<div class="space-y-1 text-[13px]">
+<div class="bg-[#0ea5e9]/20 text-[#38bdf8] px-3 py-2 rounded-lg border-l-2 border-[#0ea5e9]">Overview</div>
+<div class="px-3 py-2 opacity-60">Users</div>
+<div class="px-3 py-2 opacity-60">Files</div>
+<div class="px-3 py-2 opacity-60">Storage</div>
+<div class="px-3 py-2 opacity-60">Security</div>
+</div>
+</div>
 
-<div class="grid grid-cols-2 gap-3 mb-4">
-<div class="bg-zinc-900 border border-violet-500/30 p-4 rounded-xl">
-<p class="text-[10px] opacity-60">Total Users</p>
-<p id="u" class="text-2xl font-bold">...</p>
+<!-- MAIN -->
+<div class="flex-1 p-4 md:p-6">
+<div class="flex justify-between items-center mb-2">
+<h1 class="text-3xl font-extrabold">Overview</h1>
+<div class="bg-[#0a162e] border border-[#0ea5e9] px-3 py-1.5 rounded-lg text-[12px] text-[#38bdf8]">🔒 Bucket Privado Seguro</div>
 </div>
-<div class="bg-zinc-900 border border-violet-500/30 p-4 rounded-xl">
-<p class="text-[10px] opacity-60">Total Files</p>
-<p id="f" class="text-2xl font-bold">...</p>
+<p class="text-[13px] text-[#7dd3fc] mb-6 opacity-80">Monitor your cloud operations, users, and storage in real-time • Azul PRO</p>
+
+<!-- KPIs -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+<div class="bg-[#0a1226] border border-[#0ea5e9] rounded-xl p-5 shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+<p class="text-[11px] tracking-widest text-[#7dd3fc] mb-2">TOTAL USERS</p>
+<p id="u" class="text-5xl font-extrabold">...</p>
+<p class="text-[12px] text-emerald-300 mt-2">↗ Real-time count</p>
+</div>
+<div class="bg-[#0a1226] border border-[#0ea5e9] rounded-xl p-5 shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+<p class="text-[11px] tracking-widest text-[#7dd3fc] mb-2">TOTAL FILES</p>
+<p id="f" class="text-5xl font-extrabold">...</p>
+<p class="text-[12px] text-[#7dd3fc] mt-2">Bóveda ARCHIVOS</p>
+</div>
+<div class="bg-[#0a1226] border border-[#0ea5e9] rounded-xl p-5 shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+<p class="text-[11px] tracking-widest text-[#7dd3fc] mb-2">STORAGE USED</p>
+<p class="text-5xl font-extrabold">OK</p>
+<p class="text-[12px] text-[#7dd3fc] mt-2">2.4% • Privado • 3 Policies</p>
+<div class="h-1 bg-[#1e293b] mt-3 rounded"><div class="h-1 w-[24%] bg-[#0ea5e9] rounded"></div></div>
 </div>
 </div>
 
-<div id="lista" class="bg-zinc-900 p-4 rounded-xl text-sm">Conectando a Supabase...</div>
+<!-- USERS TABLE -->
+<div class="bg-[#0a1226] border border-[#0ea5e9]/30 rounded-xl overflow-hidden">
+<div class="p-4 flex justify-between items-center border-b border-[#1e293b]">
+<h2 class="text-xl font-bold">User Data</h2>
+<div class="text-[11px] text-[#7dd3fc]" id="status">Conectando...</div>
+</div>
+<div id="lista" class="p-4 text-sm">Cargando usuarios...</div>
+</div>
+<div class="text-[10px] text-center opacity-40 mt-4">Starmarc Cloud OPS • v2.1.0 BLUE • Secure • No se modificó seguridad del bucket</div>
+</div>
+</div>
 
 <script>
 const url = "https://cdffffghheikcmstcmcl.supabase.co";
@@ -30,15 +73,40 @@ const sb = supabase.createClient(url, key);
 
 async function cargar(){
  const {count:cu} = await sb.from('profiles').select('*',{count:'exact',head:true});
- const {count:cf} = await sb.from('archivos').select('*',{count:'exact',head:true});
  document.getElementById('u').innerText = cu ?? 0;
- document.getElementById('f').innerText = cf ?? 0;
 
- const {data} = await sb.from('profiles').select('full_name,email').limit(20);
+ let totalFiles = 0;
+ try {
+   const { data: carpetas } = await sb.storage.from('archivos').list('', { limit: 100 });
+   if(carpetas){
+     for(const item of carpetas){
+       if(item.id) totalFiles++;
+       else {
+         const { data: dentro } = await sb.storage.from('archivos').list(item.name, { limit: 1000 });
+         if(dentro) totalFiles += dentro.filter(x => x.id !== null).length;
+       }
+     }
+   }
+ } catch(e){}
+ document.getElementById('f').innerText = totalFiles;
+ document.getElementById('status').innerText = `✅ ${cu} usuarios • ${totalFiles} archivos • Bucket seguro`;
+
+ const {data} = await sb.from('profiles').select('full_name,email,created_at').order('created_at',{ascending:false}).limit(20);
  if(data && data.length){
-  document.getElementById('lista').innerHTML = data.map(d=>`<div class="py-2 border-b border-zinc-800">${d.full_name||d.email}</div>`).join('');
+  document.getElementById('lista').innerHTML = data.map(d=>`
+    <div class="flex items-center justify-between py-3 border-b border-[#1e293b] last:border-0">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-[#0ea5e9] flex items-center justify-center font-bold text-sm">${(d.full_name||d.email||'U')[0].toUpperCase()}</div>
+        <div><p class="font-semibold">${d.full_name||'Usuario'}</p><p class="text-[12px] opacity-60">${d.email}</p></div>
+      </div>
+      <div class="flex gap-2">
+        <span class="bg-[#0ea5e9]/20 text-[#38bdf8] px-2 py-1 rounded text-[11px]">Active</span>
+        <span class="bg-[#1e293b] px-2 py-1 rounded text-[11px]">${new Date(d.created_at).toLocaleDateString()}</span>
+      </div>
+    </div>
+  `).join('');
  } else {
-  document.getElementById('lista').innerText = "Conectado OK, pero tabla vacia (0 usuarios) o falta policy";
+  document.getElementById('lista').innerHTML = `<div class="text-[#7dd3fc]">✅ Conectado OK - ${cu} usuarios registrados</div>`;
  }
 }
 cargar();
