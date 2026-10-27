@@ -3,57 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STARMARC CLOUD OPS - ADMIN REAL</title>
+<title>STARMARC ADMIN REAL</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-[#06060a] text-white p-6 font-mono">
-<h1 class="text-2xl font-bold mb-6">STARMARC CLOUD OPS - DATOS REALES</h1>
+<body class="bg-[#06060a] text-white p-4">
+<h1 class="text-xl font-bold mb-4">STARMARC CLOUD OPS <span class="text-violet-400">REAL DATA</span></h1>
 
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-  <div class="bg-zinc-900 p-4 rounded-xl border border-purple-500/30">
-    <p class="text-xs opacity-60">Total Users</p>
-    <p id="total-users" class="text-2xl font-bold">...</p>
-  </div>
-  <div class="bg-zinc-900 p-4 rounded-xl border border-purple-500/30">
-    <p class="text-xs opacity-60">Total Files</p>
-    <p id="total-files" class="text-2xl font-bold">...</p>
-  </div>
-  <div class="bg-zinc-900 p-4 rounded-xl border border-purple-500/30">
-    <p class="text-xs opacity-60">Status</p>
-    <p class="text-green-400 font-bold">Operational</p>
-  </div>
-  <div class="bg-zinc-900 p-4 rounded-xl border border-purple-500/30">
-    <p class="text-xs opacity-60">Storage</p>
-    <p id="storage-used" class="text-sm">Conectando...</p>
-  </div>
+<div class="grid grid-cols-2 gap-3 mb-4">
+<div class="bg-zinc-900 border border-violet-500/30 p-4 rounded-xl">
+<p class="text-[10px] opacity-60">Total Users</p>
+<p id="u" class="text-2xl font-bold">...</p>
+</div>
+<div class="bg-zinc-900 border border-violet-500/30 p-4 rounded-xl">
+<p class="text-[10px] opacity-60">Total Files</p>
+<p id="f" class="text-2xl font-bold">...</p>
+</div>
 </div>
 
-<div id="user-list" class="bg-zinc-900 p-4 rounded-xl">Cargando usuarios reales...</div>
+<div id="lista" class="bg-zinc-900 p-4 rounded-xl text-sm">Conectando a Supabase...</div>
 
 <script>
-  // CONFIGURA AQUI
-  const SUPABASE_URL = 'https://cdffffghheikcmstcmcl.supabase.co';
-  const SUPABASE_ANON_KEY = 'PEGA_AQUI_TU_ANON_KEY_COMPLETA_eyJhbGc...';
+const url = "https://cdffffghheikcmstcmcl.supabase.co";
+const key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY";
+const sb = supabase.createClient(url, key);
 
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function cargar(){
+ const {count:cu} = await sb.from('profiles').select('*',{count:'exact',head:true});
+ const {count:cf} = await sb.from('archivos').select('*',{count:'exact',head:true});
+ document.getElementById('u').innerText = cu ?? 0;
+ document.getElementById('f').innerText = cf ?? 0;
 
-  async function cargar() {
-    // Usuarios
-    const { count: users } = await supabaseClient.from('profiles').select('*', {count:'exact', head:true});
-    if(users !== null) document.getElementById('total-users').innerText = users;
-
-    // Archivos
-    const { count: files } = await supabaseClient.from('archivos').select('*', {count:'exact', head:true});
-    if(files !== null) document.getElementById('total-files').innerText = files;
-
-    // Lista real de usuarios
-    const { data } = await supabaseClient.from('profiles').select('full_name, email').limit(10);
-    if(data){
-      document.getElementById('user-list').innerHTML = '<h3 class="font-bold mb-2">User Folders Reales</h3>' + data.map(u=> `<div class="py-2 border-b border-zinc-800">${u.full_name || u.email}</div>`).join('');
-    }
-  }
-  cargar();
+ const {data} = await sb.from('profiles').select('full_name,email').limit(20);
+ if(data && data.length){
+  document.getElementById('lista').innerHTML = data.map(d=>`<div class="py-2 border-b border-zinc-800">${d.full_name||d.email}</div>`).join('');
+ } else {
+  document.getElementById('lista').innerText = "Conectado OK, pero tabla vacia (0 usuarios) o falta policy";
+ }
+}
+cargar();
 </script>
 </body>
 </html>
