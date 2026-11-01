@@ -1,139 +1,128 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Starmarc Ops</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Archivos - Starmarc Cloud</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#0d0d0d;--card:#171717;--border:#262626}
-body{margin:0;font-family:system-ui;background:var(--bg);color:#fff;padding:16px}
-.login{max-width:380px;margin:60px auto;background:var(--card);padding:24px;border-radius:16px;border:1px solid var(--border)}
-.login input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid var(--border);background:#0f0f0f;color:#fff;box-sizing:border-box}
-.login button{width:100%;padding:12px;background:#fff;color:#000;border:0;border-radius:8px;font-weight:700;cursor:pointer;margin-top:10px}
-.login button.sec{background:#222;color:#fff;border:1px solid #333;margin-top:8px}
-.top{display:flex;justify-content:space-between;align-items:center}
-.folders{display:flex;gap:8px;margin:16px 0;overflow:auto}
-.folders button{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:#1e1e1e;color:#fff;cursor:pointer;white-space:nowrap}
+body{margin:0;font-family:system-ui;background:radial-gradient(ellipse at top,#1a2340 0%,#0a0e1a 70%);color:#fff;min-height:100vh}
+.login{max-width:360px;margin:80px auto;background:rgba(255,255,255,0.06);backdrop-filter:blur(10px);padding:24px;border-radius:24px;border:1px solid rgba(255,255,255,0.1);text-align:center}
+.login input{width:100%;padding:14px;margin:8px 0;border-radius:14px;border:0;background:#e8e8ef;color:#111;box-sizing:border-box}
+.btn{width:100%;padding:14px;border-radius:14px;border:0;font-weight:700;cursor:pointer}
+.btn-blue{background:#2f6bff;color:#fff}
+.btn-google{background:#fff;color:#111;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px}
+#app{display:none;max-width:700px;margin:0 auto;padding:16px}
+.topbar{display:flex;justify-content:space-between;align-items:center}
+.search{width:100%;padding:12px 16px;border-radius:14px;border:1px solid #1e253e;background:#151a2d;color:#fff;margin:12px 0;box-sizing:border-box}
+.folders{display:flex;gap:8px;overflow:auto;margin:8px 0}
+.folders button{white-space:nowrap;padding:8px 14px;border-radius:20px;border:1px solid #1e253e;background:#151a2d;color:#fff;cursor:pointer}
 .folders button.active{background:#fff;color:#000}
-.grid{display:grid;gap:12px}
-.card{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--border);padding:12px;border-radius:12px}
-.card img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:#222}
-.thumb{width:56px;height:56px;border-radius:8px;background:#222;display:flex;align-items:center;justify-content:center;font-size:22px}
-.name{font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.meta{font-size:11px;color:#888}
-a.open{margin-left:auto;color:#fff;text-decoration:none;background:#2a2a2a;padding:6px 12px;border-radius:8px;font-size:12px}
-#app{display:none}
+.card{background:#151a2d;border:1px solid #1e253e;border-radius:16px;padding:12px;margin-bottom:12px}
+.card img,.card video{width:100%;max-height:300px;object-fit:contain;border-radius:12px;background:#000}
+.row{display:flex;gap:8px;margin-top:8px}
+.row button{flex:1;padding:10px;border-radius:10px;border:0;font-weight:600;cursor:pointer}
+.btn-ver{background:#2a2f4a;color:#fff}.btn-down{background:#2f6bff;color:#fff}.btn-x{background:#3a1e1e;color:#ff8e8e;width:40px;flex:none}
+.sheet{position:fixed;bottom:0;left:0;right:0;background:#1e253e;border-radius:20px 20px 0 0;padding:20px;display:none}
 </style>
 </head>
 <body>
 
 <div id="loginBox" class="login">
-<h2>Starmarc Cloud</h2>
-<p style="font-size:13px;color:#aaa">Entra o crea tu cuenta para ver tus archivos</p>
-<input id="email" type="email" placeholder="Tu email">
-<input id="pass" type="password" placeholder="Contraseña (mín 6 letras)">
-<button onclick="login()">Entrar</button>
-<button class="sec" onclick="registrar()">Crear cuenta nueva</button>
-<div id="msg" style="margin-top:10px;color:#ff6b6b;font-size:13px"></div>
+<div style="font-size:28px">☁️</div><h2>Mis Archivos</h2><small style="color:#8b9dcf">Starmarc Cloud</small>
+<h3 style="margin-top:18px">Iniciar sesión</h3>
+<input id="email" type="email" placeholder="correo"><input id="pass" type="password" placeholder="contraseña">
+<button class="btn btn-blue" onclick="login()">Iniciar Sesión</button>
+<div style="margin:12px 0;color:#8b9dcf;font-size:13px">o continuar con</div>
+<button class="btn btn-google" onclick="loginGoogle()"><img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18"> Continuar con Google</button>
+<div style="margin-top:14px;font-size:13px">No tienes cuenta? <a onclick="registrar()" style="color:#2f6bff;cursor:pointer">Regístrate</a></div>
+<div id="msg" style="margin-top:10px;color:#ff8e8e;font-size:13px"></div>
 </div>
 
 <div id="app">
-<div class="top"><h3>Mis Archivos</h3><button onclick="logout()" style="background:#222;color:#fff;border:1px solid #333;padding:6px 12px;border-radius:8px">Salir</button></div>
-<div class="folders">
-<button class="active" onclick="filtrar('todo',this)">Todo</button>
-<button onclick="filtrar('imagen',this)">Imágenes</button>
-<button onclick="filtrar('video',this)">Videos</button>
-<button onclick="filtrar('doc',this)">Docs</button>
+<div class="topbar"><div>☁️ <b>Mis Archivos</b></div><button onclick="document.getElementById('sheet').style.display='block'" style="background:#2f6bff;border:0;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px">+</button></div>
+<input class="search" id="buscar" placeholder="🔍 Buscar en mis archivos..." oninput="filtrarBusqueda()">
+<div class="folders"><button class="active" onclick="filtrarCarpeta('todo',this)">Todo</button><button onclick="filtrarCarpeta('imagenes',this)">Imágenes</button><button onclick="filtrarCarpeta('videos',this)">Videos</button><button onclick="filtrarCarpeta('documentos',this)">Docs</button></div>
+<small id="sub" style="color:#8b9dcf">Tus archivos son privados, solo tú los ves</small>
+<div id="lista" style="margin-top:16px">Cargando...</div>
 </div>
-<div id="lista" class="grid">Cargando...</div>
+
+<div id="sheet" class="sheet">
+<div style="display:flex;justify-content:space-around">
+<button onclick="fileInput.click()"><div>📷</div>Fotos</button>
+<button onclick="fileInput.click()"><div>🎥</div>Videos</button>
+<button onclick="fileInput.click()"><div>📄</div>Archivos</button>
+</div>
+<button onclick="this.parentElement.style.display='none'" style="width:100%;margin-top:12px;color:#aaa;background:none;border:0">Cerrar</button>
+<input type="file" id="fileInput" hidden multiple onchange="subirFiles(this.files)">
 </div>
 
 <script>
-const SUPABASE_URL = 'https://cdffffghheikcmstcmcl.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY';
-const BUCKET = 'archivos';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let todos = [];
+const SUPA_URL='https://cdffffghheikcmstcmcl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY';
+const BUCKET='archivos';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+let todos=[]; let carpetaActiva='todo';
 
-async function checkSession(){
-  const { data } = await sb.auth.getSession();
-  if(data.session){ document.getElementById('loginBox').style.display='none'; document.getElementById('app').style.display='block'; cargar(); }
-}
-checkSession();
+sb.auth.onAuthStateChange((e,s)=>{ if(s){ loginBox.style.display='none'; app.style.display='block'; cargar(); } });
+(async()=>{ const {data}=await sb.auth.getSession(); if(data.session){ loginBox.style.display='none'; app.style.display='block'; cargar(); } })();
 
-async function login(){
-  const email = document.getElementById('email').value.trim();
-  const pass = document.getElementById('pass').value.trim();
-  if(!email || !pass){ document.getElementById('msg').innerText='Pon email y contraseña'; return; }
-  document.getElementById('msg').innerText='Entrando...';
-  const { error } = await sb.auth.signInWithPassword({email, password: pass});
-  if(error){ document.getElementById('msg').innerText='Error: '+error.message; }
-  else { document.getElementById('loginBox').style.display='none'; document.getElementById('app').style.display='block'; cargar(); }
+async function login(){ const e=email.value.trim(), p=pass.value.trim(); const {error}=await sb.auth.signInWithPassword({email:e,password:p}); if(error) msg.innerText=error.message; }
+async function registrar(){ const e=email.value.trim(), p=pass.value.trim(); if(p.length<6){msg.innerText='Mínimo 6';return;} const {error}=await sb.auth.signUp({email:e,password:p}); if(error) msg.innerText=error.message; else {msg.style.color='#4ade80'; msg.innerText='Cuenta creada';} }
+function loginGoogle(){ sb.auth.signInWithOAuth({provider:'google', options:{redirectTo: window.location.href}}) }
+
+function getCarpetaPorNombre(nombre){
+ const ext=nombre.split('.').pop().toLowerCase();
+ if(['jpg','jpeg','png','webp','gif','heic'].includes(ext)) return 'imagenes';
+ if(['mp4','mov','avi','webm','mkv'].includes(ext)) return 'videos';
+ return 'documentos';
 }
 
-async function registrar(){
-  const email = document.getElementById('email').value.trim();
-  const pass = document.getElementById('pass').value.trim();
-  if(!email || !pass){ document.getElementById('msg').innerText='Pon email y contraseña'; return; }
-  if(pass.length < 6){ document.getElementById('msg').innerText='La contraseña debe tener mínimo 6 caracteres'; return; }
-  document.getElementById('msg').innerText='Creando cuenta...';
-  const { data, error } = await sb.auth.signUp({email, password: pass});
-  if(error){ document.getElementById('msg').innerText='Error: '+error.message; }
-  else { 
-    document.getElementById('msg').style.color='#4ade80';
-    document.getElementById('msg').innerText='¡Cuenta creada! Entrando...';
-    setTimeout(async()=>{
-      await sb.auth.signInWithPassword({email, password: pass});
-      document.getElementById('loginBox').style.display='none';
-      document.getElementById('app').style.display='block';
-      cargar();
-    }, 800);
-  }
+async function subirFiles(files){
+ const {data:{user}}=await sb.auth.getUser();
+ for(let f of files){
+  sub.innerText='Subiendo '+f.name+'...';
+  const carpeta=getCarpetaPorNombre(f.name);
+  const ruta=`${user.id}/${carpeta}/${Date.now()}_${f.name}`;
+  const {error}=await sb.storage.from(BUCKET).upload(ruta,f);
+  if(error) alert(error.message);
+ }
+ document.getElementById('sheet').style.display='none';
+ cargar();
 }
-
-async function logout(){ await sb.auth.signOut(); location.reload(); }
 
 async function cargar(){
-  const { data:{user} } = await sb.auth.getUser();
-  if(!user) return;
-  const { data, error } = await sb.storage.from(BUCKET).list(user.id, {limit:100, sortBy:{column:'created_at', order:'desc'}});
-  if(error){ document.getElementById('lista').innerHTML = error.message; return; }
-  todos = data || [];
-  pintar(todos);
+ const {data:{user}}=await sb.auth.getUser(); if(!user) return;
+ todos=[];
+ const carpetas=['imagenes','videos','documentos'];
+ // listar raiz por si tenias archivos viejos sueltos
+ const {data:root}=await sb.storage.from(BUCKET).list(user.id);
+ if(root){ for(let it of root){ if(it.metadata){ todos.push({carpeta:'root', file:it, path:`${user.id}/${it.name}`}) } } }
+ for(let c of carpetas){
+  const {data}=await sb.storage.from(BUCKET).list(`${user.id}/${c}`);
+  if(data){ for(let f of data){ todos.push({carpeta:c, file:f, path:`${user.id}/${c}/${f.name}`}) } }
+ }
+ pintar();
 }
 
-function getPublicUrl(fileName, userId){ return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${userId}/${fileName}`; }
-
-function pintar(files){
-  const lista = document.getElementById('lista');
-  if(files.length===0){ lista.innerHTML='No hay archivos aún. Cada usuario ve solo sus archivos.'; return; }
-  sb.auth.getUser().then(({data})=>{
-    const uid = data.user?.id;
-    lista.innerHTML = files.map(f=>{
-      const nombreReal = f.metadata?.originalName || f.name.split('_').slice(1).join('_') || f.name;
-      const ext = f.name.split('.').pop().toLowerCase();
-      const isImg = ['jpg','jpeg','png','webp','gif'].includes(ext);
-      const tipo = isImg ? 'imagen' : ['mp4','mov','webm','avi'].includes(ext) ? 'video' : 'doc';
-      const url = getPublicUrl(f.name, uid);
-      let thumb = `<div class="thumb">${isImg?'🖼️':tipo==='video'?'🎥':'📄'}</div>`;
-      if(isImg) thumb = `<img src="${url}" onerror="this.outerHTML='<div class=thumb>🖼️</div>'">`;
-      return `<div class="card" data-tipo="${tipo}">${thumb}<div><div class="name" title="${nombreReal}">${nombreReal}</div><div class="meta">${new Date(f.created_at).toLocaleDateString()}</div></div><a class="open" href="${url}" target="_blank">Abrir</a></div>`;
-    }).join('');
-  });
+function pintar(){
+ let listaFiltrada = carpetaActiva=='todo' ? todos : todos.filter(t=>t.carpeta==carpetaActiva);
+ const q=buscar.value.toLowerCase();
+ if(q) listaFiltrada=listaFiltrada.filter(t=>t.file.name.toLowerCase().includes(q));
+ const l=document.getElementById('lista');
+ if(listaFiltrada.length==0){ l.innerHTML='No hay archivos en esta carpeta'; return;}
+ l.innerHTML=listaFiltrada.map(t=>{
+  const raw=t.file.name;
+  const nombreReal=raw.split('_').slice(1).join('_')||raw; // quita el timestamp
+  const url=`${SUPA_URL}/storage/v1/object/public/${BUCKET}/${t.path}`;
+  const isImg=/\.(jpg|jpeg|png|webp|gif)$/i.test(nombreReal);
+  const isVid=/\.(mp4|mov|webm)$/i.test(nombreReal);
+  let prev=isImg?`<img src="${url}">`:isVid?`<video src="${url}" controls></video>`:`<div style="padding:30px;text-align:center;font-size:30px">📄</div>`;
+  return `<div class="card">${prev}<div style="margin-top:8px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📁 ${t.carpeta} / ${nombreReal}</div><small style="color:#8b9dcf">${(t.file.metadata?.size/1024/1024).toFixed(2)||'0'} MB • ${new Date(t.file.created_at).toLocaleDateString()}</small></div><div class="row"><button class="btn-ver" onclick="window.open('${url}','_blank')">Ver</button><button class="btn-down" onclick="window.open('${url}','_blank')">Descargar</button><button class="btn-x" onclick="borrar('${t.path}')">X</button></div></div>`;
+ }).join('');
 }
-
-function filtrar(tipo, btn){
-  document.querySelectorAll('.folders button').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  if(tipo==='todo') pintar(todos);
-  else pintar(todos.filter(f=>{
-    const ext = f.name.split('.').pop().toLowerCase();
-    if(tipo==='imagen') return ['jpg','jpeg','png','webp','gif'].includes(ext);
-    if(tipo==='video') return ['mp4','mov','webm','avi'].includes(ext);
-    if(tipo==='doc') return !['jpg','jpeg','png','webp','gif','mp4','mov','webm','avi'].includes(ext);
-  }));
-}
+function filtrarCarpeta(c,btn){ carpetaActiva=c; document.querySelectorAll('.folders button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); pintar(); }
+function filtrarBusqueda(){ pintar(); }
+async function borrar(fullPath){ if(!confirm('¿Borrar '+fullPath.split('/').pop()+'?')) return; await sb.storage.from(BUCKET).remove([fullPath]); cargar(); }
 </script>
 </body>
 </html>
