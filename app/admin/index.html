@@ -1,136 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mis Archivos</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starmarc-Ops - Búnker Privado</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{margin:0;font-family:system-ui;background:radial-gradient(ellipse at top,#1a2340 0%,#0a0e1a 70%);color:#fff;min-height:100vh}
-#app{max-width:700px;margin:0 auto}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:16px}
-.search{width:calc(100% - 32px);margin:0 16px;padding:12px 16px;border-radius:14px;border:1px solid #1e253e;background:#151a2d;color:#fff;box-sizing:border-box}
-.content{padding:16px}
-.folder-title{margin:20px 0 10px;font-weight:700;color:#8b9dcf;display:flex;justify-content:space-between}
-.card{background:#151a2d;border:1px solid #1e253e;border-radius:16px;padding:12px;margin-bottom:12px}
-.card img,.card video{width:100%;max-height:320px;object-fit:contain;border-radius:12px;background:#000}
-.row{display:flex;gap:8px;margin-top:8px}
-.row button{flex:1;padding:10px;border-radius:10px;border:0;font-weight:600}
-.btn-ver{background:#2a2f4a;color:#fff}.btn-down{background:#2f6bff;color:#fff}.btn-x{background:#3a1e1e;color:#ff8e8e;width:44px;flex:none}
-#sidebar{position:fixed;top:0;left:-280px;width:260px;height:100%;background:#0f1426;border-right:1px solid #1e253e;transition:0.3s;z-index:100;padding:20px}
-#sidebar.open{left:0}
-#overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;z-index:90}
-#overlay.show{display:block}
-.sheet{position:fixed;bottom:0;left:0;right:0;background:#1e253e;border-radius:20px 20px 0 0;padding:20px;display:none;z-index:110}
+  body{font-family:Arial;background:#111;color:#fff;padding:20px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px}
+  .card{background:#222;border-radius:10px;overflow:hidden;padding:10px}
+  .card img,.card video{width:100%;height:180px;object-fit:cover;border-radius:8px;background:#000}
+  button{background:#fff;color:#000;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;margin:5px 0}
+  input{background:#222;color:#fff;border:1px solid #333;padding:8px;border-radius:6px}
 </style>
 </head>
 <body>
-<div id="overlay" onclick="closeMenu()"></div>
-<div id="sidebar">
-<h3>☁️ Starmarc</h3>
-<div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
-<button onclick="carpetaActiva='todo';pintar();closeMenu()" style="text-align:left;padding:12px;border-radius:10px;background:#1e253e;color:#fff;border:0">📁 Todo</button>
-<button onclick="carpetaActiva='imagenes';pintar();closeMenu()" style="text-align:left;padding:12px;border-radius:10px;background:#1e253e;color:#fff;border:0">🖼️ Imágenes</button>
-<button onclick="carpetaActiva='videos';pintar();closeMenu()" style="text-align:left;padding:12px;border-radius:10px;background:#1e253e;color:#fff;border:0">🎬 Videos</button>
-<button onclick="carpetaActiva='documentos';pintar();closeMenu()" style="text-align:left;padding:12px;border-radius:10px;background:#1e253e;color:#fff;border:0">📄 Docs</button>
+<h2>Starmarc-Ops - Búnker Privado</h2>
+<div id="auth">
+  <input id="email" placeholder="email" />
+  <input id="pass" type="password" placeholder="password" />
+  <button onclick="login()">Entrar</button>
+  <button onclick="registrar()">Registrar</button>
 </div>
-</div>
-
-<div id="app">
-<div class="topbar"><button onclick="openMenu()" style="background:#151a2d;border:1px solid #1e253e;color:#fff;padding:8px 12px;border-radius:10px">☰</button><div><b>☁️ Mis Archivos</b></div><button onclick="sheet.style.display='block'" style="background:#2f6bff;border:0;color:#fff;width:40px;height:40px;border-radius:50%">+</button></div>
-<input class="search" id="buscar" placeholder="🔍 Buscar en mis archivos..." oninput="pintar()">
-<div class="content"><div id="lista">Cargando...</div></div>
-</div>
-
-<div id="sheet" class="sheet">
-<div style="display:flex;justify-content:space-around">
-<button onclick="fileInput.click()" style="background:none;border:0;color:#fff">📷 Fotos</button>
-<button onclick="fileInput.click()" style="background:none;border:0;color:#fff">🎬 Videos</button>
-<button onclick="fileInput.click()" style="background:none;border:0;color:#fff">📄 Archivos</button>
-</div>
-<button onclick="sheet.style.display='none'" style="width:100%;margin-top:16px;background:none;border:0;color:#aaa">Cerrar</button>
-<input type="file" id="fileInput" hidden multiple onchange="subirFiles(this.files)">
+<div id="panel" style="display:none">
+  <button onclick="logout()">Salir</button>
+  <input type="file" id="fileInput" />
+  <button onclick="subir()">Subir</button>
+  <h3>Mis Archivos</h3>
+  <div id="lista" class="grid"></div>
 </div>
 
 <script>
-const SUPA_URL='https://cdffffghheikcmstcmcl.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY';
-const BUCKET='archivos';
-const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
-let todos=[]; let carpetaActiva='todo';
-function openMenu(){sidebar.classList.add('open');overlay.classList.add('show')}
-function closeMenu(){sidebar.classList.remove('open');overlay.classList.remove('show')}
-function getCarpeta(n){ const e=n.split('.').pop().toLowerCase(); if(['jpg','jpeg','png','webp','gif'].includes(e)) return 'imagenes'; if(['mp4','mov','avi','webm'].includes(e)) return 'videos'; return 'documentos'; }
-function nombreBonito(name){
- // Si es 7503f07fa1ce163...mp4 lo deja asi pero sin root, si es 12345_IMG.jpg quita el timestamp
- if(name.includes('_')){ const partes=name.split('_'); // quita timestamp
-  // Si la primera parte es numero, es nuestro timestamp
-  if(!isNaN(partes[0])) return partes.slice(1).join('_');
- }
- return name;
+const SUPABASE_URL = "https://cdffffghheikcmstcmcl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY";
+const BUCKET = "archivos";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function login(){
+  const {error} = await sb.auth.signInWithPassword({email:document.getElementById('email').value,password:document.getElementById('pass').value});
+  if(error) return alert(error.message);
+  check();
 }
-async function subirFiles(files){
- const {data:{user}}=await sb.auth.getUser();
- for(let f of files){
-  const carp=carpetaActiva=='todo'? getCarpeta(f.name) : carpetaActiva;
-  const ruta=`${user.id}/${carp}/${Date.now()}_${f.name}`;
-  await sb.storage.from(BUCKET).upload(ruta,f);
- }
- sheet.style.display='none'; cargar();
+async function registrar(){
+  const {error} = await sb.auth.signUp({email:document.getElementById('email').value,password:document.getElementById('pass').value});
+  if(error) return alert(error.message);
+  alert("Revisa tu correo para confirmar");
 }
-async function cargar(){
- const {data:{user}}=await sb.auth.getUser(); if(!user) return;
- todos=[];
- // 1. Archivos nuevos ya en carpetas
- for(let c of ['imagenes','videos','documentos']){
-  const {data}=await sb.storage.from(BUCKET).list(`${user.id}/${c}`,{limit:100});
-  if(data) data.forEach(f=>{ if(f.name!='.emptyFolderPlaceholder') todos.push({carpeta:c,file:f,path:`${user.id}/${c}/${f.name}`}) });
- }
- // 2. Archivos viejos que estan en root (los que te salen feos) - los incluimos pero les asignamos carpeta por extension
- const {data:root}=await sb.storage.from(BUCKET).list(user.id,{limit:100});
- if(root) root.forEach(f=>{
-  if(f.metadata){ // es archivo, no carpeta
-   const carp=getCarpeta(f.name);
-   todos.push({carpeta:carp,file:f,path:`${user.id}/${f.name}`, esViejo:true});
+async function logout(){ await sb.auth.signOut(); location.reload(); }
+
+async function check(){
+  const {data:{user}} = await sb.auth.getUser();
+  if(user){
+    document.getElementById("auth").style.display="none";
+    document.getElementById("panel").style.display="block";
+    cargarArchivos(user.id);
   }
- });
- pintar();
 }
-function pintar(){
- const l=document.getElementById('lista');
- let lista=todos.filter(t=> !buscar.value || nombreBonito(t.file.name).toLowerCase().includes(buscar.value.toLowerCase()));
- lista.sort((a,b)=> new Date(b.file.created_at) - new Date(a.file.created_at));
- 
- if(carpetaActiva!='todo') lista=lista.filter(t=>t.carpeta==carpetaActiva);
 
- if(lista.length==0){ l.innerHTML='No hay archivos'; return; }
+async function subir(){
+  const file = document.getElementById("fileInput").files[0];
+  if(!file) return alert("Elige archivo");
+  const {data:{user}} = await sb.auth.getUser();
+  const path = `${user.id}/${Date.now()}-${file.name}`;
+  const {error} = await sb.storage.from(BUCKET).upload(path, file);
+  if(error) return alert(error.message);
+  alert("Subido en privado");
+  cargarArchivos(user.id);
+}
 
- // Ordenado por carpetas de verdad
- let html='';
- const orden=['imagenes','videos','documentos'];
- const grupos={}; lista.forEach(t=>{ if(!grupos[t.carpeta]) grupos[t.carpeta]=[]; grupos[t.carpeta].push(t); });
-
- const carpetasA_Mostrar = carpetaActiva=='todo' ? orden : [carpetaActiva];
-
- carpetasA_Mostrar.forEach(carp=>{
-  const archivos=grupos[carp]||[];
-  if(archivos.length==0 && carpetaActiva=='todo') return;
-  const icon=carp=='imagenes'?'🖼️':carp=='videos'?'🎬':'📄';
-  if(carpetaActiva=='todo'){
-   html+=`<div class="folder-title"><span>${icon} ${carp.toUpperCase()}</span><span style="color:#5a6aaa">${archivos.length} archivos</span></div>`;
+async function cargarArchivos(uid){
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "Cargando búnker privado...";
+  const {data, error} = await sb.storage.from(BUCKET).list(uid, {limit:100, sortBy:{column:'created_at',order:'desc'}});
+  if(error) return lista.innerHTML = error.message;
+  if(!data || !data.length) return lista.innerHTML = "Sin archivos";
+  
+  lista.innerHTML = "";
+  for(const f of data){
+    if(f.name === ".emptyFolderPlaceholder") continue;
+    const fullPath = `${uid}/${f.name}`;
+    const {data:signed, error:err2} = await sb.storage.from(BUCKET).createSignedUrl(fullPath, 3600);
+    if(err2 || !signed) continue;
+    const url = signed.signedUrl;
+    const isVideo = f.name.match(/\.(mp4|mov|webm)$/i);
+    lista.innerHTML += `
+      <div class="card">
+        ${isVideo ? `<video src="${url}" controls></video>` : `<img src="${url}" loading="lazy">`}
+        <small>${f.name}</small><br>
+        <a href="${url}" target="_blank"><button>Ver / Descargar</button></a>
+      </div>`;
   }
-  archivos.forEach(t=>{
-   const nb=nombreBonito(t.file.name);
-   const url=`${SUPA_URL}/storage/v1/object/public/${BUCKET}/${t.path}`;
-   const isImg=/\.(jpg|jpeg|png|webp)$/i.test(nb);
-   const isVid=/\.(mp4|mov|webm)$/i.test(nb);
-   let prev=isImg?`<img src="${url}">`:isVid?`<video src="${url}" controls></video>`:`<div style="padding:20px;text-align:center">📄 ${nb}</div>`;
-   html+=`<div class="card">${prev}<div style="margin-top:8px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nb}</div><small style="color:#8b9dcf">${carp} • ${(t.file.metadata?.size/1024/1024||0).toFixed(2)} MB</small></div><div class="row"><button class="btn-ver" onclick="window.open('${url}','_blank')">Ver</button><button class="btn-down" onclick="window.open('${url}','_blank')">Descargar</button><button class="btn-x" onclick="borrar('${t.path}')">X</button></div></div>`;
-  });
- });
- l.innerHTML=html;
 }
-async function borrar(p){ if(!confirm('Borrar?')) return; await sb.storage.from(BUCKET).remove([p]); cargar(); }
-cargar();
+check();
 </script>
 </body>
 </html>
