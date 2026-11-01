@@ -3,31 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Starmarc-Ops - Búnker Privado</title>
+<title>Mis Archivos - Starmars Cloud</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  body{font-family:Arial;background:#111;color:#fff;padding:20px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px}
-  .card{background:#222;border-radius:10px;overflow:hidden;padding:10px}
-  .card img,.card video{width:100%;height:180px;object-fit:cover;border-radius:8px;background:#000}
-  button{background:#fff;color:#000;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;margin:5px 0}
-  input{background:#222;color:#fff;border:1px solid #333;padding:8px;border-radius:6px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,Arial;background:#f4f6fb;color:#111;display:flex;min-height:100vh}
+  #sidebar{width:260px;background:#ffffff;border-right:1px solid #e5e7eb;padding:22px;display:flex;flex-direction:column}
+  #sidebar h3{margin-bottom:18px}
+  .folder{padding:11px 12px;border-radius:10px;cursor:pointer;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+  .folder:hover{background:#eef2ff}
+  .folder.active{background:#111;color:#fff}
+  #main{flex:1;padding:24px;background:#f4f6fb}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:16px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card video,.card img{width:100%;height:200px;object-fit:cover;border-radius:10px;background:#000;display:block}
+  .name{font-size:13px;font-weight:600;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  button{background:#111;color:#fff;border:0;padding:9px 14px;border-radius:9px;cursor:pointer}
+  input{background:#fff;border:1px solid #ddd;padding:8px;border-radius:8px}
 </style>
 </head>
 <body>
-<h2>Starmarc-Ops - Búnker Privado</h2>
-<div id="auth">
-  <input id="email" placeholder="email" />
-  <input id="pass" type="password" placeholder="password" />
-  <button onclick="login()">Entrar</button>
-  <button onclick="registrar()">Registrar</button>
+<div id="sidebar">
+  <h3>☁️ Starmars Cloud</h3>
+  <div class="folder active" onclick="cambiarCarpeta('',this)">📂 Todo</div>
+  <div class="folder" onclick="cambiarCarpeta('imagenes',this)">🖼️ Imágenes</div>
+  <div class="folder" onclick="cambiarCarpeta('videos',this)">🎬 Videos</div>
+  <div class="folder" onclick="cambiarCarpeta('documentos',this)">📄 Documentos</div>
+  <div style="margin-top:auto;padding-top:20px">
+    <button id="btnSalir" style="display:none;width:100%" onclick="logout()">Salir</button>
+  </div>
 </div>
-<div id="panel" style="display:none">
-  <button onclick="logout()">Salir</button>
-  <input type="file" id="fileInput" />
-  <button onclick="subir()">Subir</button>
-  <h3>Mis Archivos</h3>
-  <div id="lista" class="grid"></div>
+
+<div id="main">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <h2 id="titulo">Mis Archivos</h2>
+    <div>
+      <input type="file" id="fileInput">
+      <button onclick="subir()">Subir</button>
+    </div>
+  </div>
+  <div id="lista" class="grid">Verificando sesión...</div>
 </div>
 
 <script>
@@ -36,62 +51,82 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const BUCKET = "archivos";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function login(){
-  const {error} = await sb.auth.signInWithPassword({email:document.getElementById('email').value,password:document.getElementById('pass').value});
-  if(error) return alert(error.message);
-  check();
-}
-async function registrar(){
-  const {error} = await sb.auth.signUp({email:document.getElementById('email').value,password:document.getElementById('pass').value});
-  if(error) return alert(error.message);
-  alert("Revisa tu correo para confirmar");
-}
-async function logout(){ await sb.auth.signOut(); location.reload(); }
+let uidActual = null;
+let carpetaActual = "";
 
-async function check(){
+async function init(){
   const {data:{user}} = await sb.auth.getUser();
-  if(user){
-    document.getElementById("auth").style.display="none";
-    document.getElementById("panel").style.display="block";
-    cargarArchivos(user.id);
+  if(!user){
+    document.getElementById('lista').innerHTML = "No has iniciado sesión. Vuelve al login.";
+    return;
+  }
+  uidActual = user.id;
+  document.getElementById('btnSalir').style.display = "block";
+  cargarArchivos();
+}
+
+function cambiarCarpeta(carpeta, el){
+  carpetaActual = carpeta;
+  document.querySelectorAll('.folder').forEach(f=>f.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('titulo').innerText = carpeta ? carpeta.charAt(0).toUpperCase()+carpeta.slice(1) : "Todo";
+  cargarArchivos();
+}
+
+async function cargarArchivos(){
+  const lista = document.getElementById('lista');
+  lista.innerHTML = "Cargando búnker privado...";
+  let todos = [];
+  const buscar = carpetaActual ? [carpetaActual] : ['imagenes','videos','documentos'];
+  
+  for(const sub of buscar){
+    const {data, error} = await sb.storage.from(BUCKET).list(`${uidActual}/${sub}`, {limit:200, sortBy:{column:'created_at', order:'desc'}});
+    if(data) todos = todos.concat(data.filter(f=>f.name !== ".emptyFolderPlaceholder").map(f=>({...f, _carpeta:sub})));
+  }
+
+  if(!todos.length){ lista.innerHTML = "Búnker vacío"; return; }
+  
+  lista.innerHTML = "";
+  for(const f of todos){
+    const fullPath = `${uidActual}/${f._carpeta}/${f.name}`;
+    const {data:signed} = await sb.storage.from(BUCKET).createSignedUrl(fullPath, 3600);
+    if(!signed) continue;
+
+    // NOMBRE REAL SIN TIMESTAMP
+    let nombreReal = f.name;
+    if(nombreReal.includes("-")){
+      const posible = nombreReal.substring(nombreReal.indexOf("-")+1);
+      if(posible.length > 3) nombreReal = posible;
+    }
+    const isVideo = f.name.match(/\.(mp4|mov|webm|m4v)$/i);
+
+    lista.innerHTML += `
+      <div class="card">
+        ${isVideo ? `<video src="${signed.signedUrl}" preload="metadata" controls playsinline muted></video>` : `<img src="${signed.signedUrl}" loading="lazy">`}
+        <div class="name" title="${nombreReal}">${nombreReal}</div>
+        <small style="color:#666">${f._carpeta} • ${f.metadata?.size ? (f.metadata.size/1024/1024).toFixed(2)+' MB' : ''}</small>
+        <a href="${signed.signedUrl}" target="_blank"><button style="width:100%;margin-top:8px">Ver / Descargar</button></a>
+      </div>`;
   }
 }
 
 async function subir(){
-  const file = document.getElementById("fileInput").files[0];
+  const file = document.getElementById('fileInput').files[0];
   if(!file) return alert("Elige archivo");
-  const {data:{user}} = await sb.auth.getUser();
-  const path = `${user.id}/${Date.now()}-${file.name}`;
+  const ext = file.name.split('.').pop().toLowerCase();
+  let sub = "documentos";
+  if(['jpg','jpeg','png','webp','heic'].includes(ext)) sub = "imagenes";
+  if(['mp4','mov','webm','m4v'].includes(ext)) sub = "videos";
+  
+  const path = `${uidActual}/${sub}/${Date.now()}-${file.name}`;
   const {error} = await sb.storage.from(BUCKET).upload(path, file);
   if(error) return alert(error.message);
-  alert("Subido en privado");
-  cargarArchivos(user.id);
+  cargarArchivos();
 }
 
-async function cargarArchivos(uid){
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "Cargando búnker privado...";
-  const {data, error} = await sb.storage.from(BUCKET).list(uid, {limit:100, sortBy:{column:'created_at',order:'desc'}});
-  if(error) return lista.innerHTML = error.message;
-  if(!data || !data.length) return lista.innerHTML = "Sin archivos";
-  
-  lista.innerHTML = "";
-  for(const f of data){
-    if(f.name === ".emptyFolderPlaceholder") continue;
-    const fullPath = `${uid}/${f.name}`;
-    const {data:signed, error:err2} = await sb.storage.from(BUCKET).createSignedUrl(fullPath, 3600);
-    if(err2 || !signed) continue;
-    const url = signed.signedUrl;
-    const isVideo = f.name.match(/\.(mp4|mov|webm)$/i);
-    lista.innerHTML += `
-      <div class="card">
-        ${isVideo ? `<video src="${url}" controls></video>` : `<img src="${url}" loading="lazy">`}
-        <small>${f.name}</small><br>
-        <a href="${url}" target="_blank"><button>Ver / Descargar</button></a>
-      </div>`;
-  }
-}
-check();
+async function logout(){ await sb.auth.signOut(); location.href = "login.html"; }
+
+init();
 </script>
 </body>
 </html>
