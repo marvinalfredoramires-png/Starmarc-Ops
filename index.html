@@ -6,23 +6,27 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body{margin:0;font-family:system-ui;background:radial-gradient(ellipse at top,#1a2340 0%,#0a0e1a 70%);color:#fff;min-height:100vh}
-.login{max-width:360px;margin:80px auto;background:rgba(255,255,255,0.06);backdrop-filter:blur(10px);padding:24px;border-radius:24px;border:1px solid rgba(255,255,255,0.1);text-align:center}
+.login{max-width:360px;margin:80px auto;background:rgba(255,255,255,0.06);backdrop-filter:blur(10px);padding:24px;border-radius:24px;text-align:center}
 .login input{width:100%;padding:14px;margin:8px 0;border-radius:14px;border:0;background:#e8e8ef;color:#111;box-sizing:border-box}
 .btn{width:100%;padding:14px;border-radius:14px;border:0;font-weight:700;cursor:pointer}
-.btn-blue{background:#2f6bff;color:#fff}
-.btn-google{background:#fff;color:#111;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px}
-#app{display:none;max-width:700px;margin:0 auto;padding:16px}
-.topbar{display:flex;justify-content:space-between;align-items:center}
-.search{width:100%;padding:12px 16px;border-radius:14px;border:1px solid #1e253e;background:#151a2d;color:#fff;margin:12px 0;box-sizing:border-box}
-.folders{display:flex;gap:8px;overflow:auto;margin:8px 0}
-.folders button{white-space:nowrap;padding:8px 14px;border-radius:20px;border:1px solid #1e253e;background:#151a2d;color:#fff;cursor:pointer}
-.folders button.active{background:#fff;color:#000}
+.btn-blue{background:#2f6bff;color:#fff}.btn-google{background:#fff;color:#111;display:flex;gap:8px;justify-content:center;margin-top:14px}
+#app{display:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:16px}
+.search{width:calc(100% - 32px);margin:0 16px;padding:12px 16px;border-radius:14px;border:1px solid #1e253e;background:#151a2d;color:#fff;box-sizing:border-box}
+.content{padding:16px;max-width:700px;margin:0 auto}
+.folder-card{display:flex;justify-content:space-between;align-items:center;background:#151a2d;border:1px solid #1e253e;border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer}
+.folder-card b{font-size:15px}
 .card{background:#151a2d;border:1px solid #1e253e;border-radius:16px;padding:12px;margin-bottom:12px}
-.card img,.card video{width:100%;max-height:300px;object-fit:contain;border-radius:12px;background:#000}
+.card img,.card video{width:100%;max-height:320px;object-fit:contain;border-radius:12px;background:#000}
 .row{display:flex;gap:8px;margin-top:8px}
-.row button{flex:1;padding:10px;border-radius:10px;border:0;font-weight:600;cursor:pointer}
-.btn-ver{background:#2a2f4a;color:#fff}.btn-down{background:#2f6bff;color:#fff}.btn-x{background:#3a1e1e;color:#ff8e8e;width:40px;flex:none}
-.sheet{position:fixed;bottom:0;left:0;right:0;background:#1e253e;border-radius:20px 20px 0 0;padding:20px;display:none}
+.row button{flex:1;padding:10px;border-radius:10px;border:0;font-weight:600}
+.btn-ver{background:#2a2f4a;color:#fff}.btn-down{background:#2f6bff;color:#fff}.btn-x{background:#3a1e1e;color:#ff8e8e;width:44px;flex:none}
+#sidebar{position:fixed;top:0;left:-280px;width:260px;height:100%;background:#0f1426;border-right:1px solid #1e253e;transition:0.3s;z-index:100;padding:20px}
+#sidebar.open{left:0}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;z-index:90}
+#overlay.show{display:block}
+.sheet{position:fixed;bottom:0;left:0;right:0;background:#1e253e;border-radius:20px 20px 0 0;padding:20px;display:none;z-index:110}
+.breadcrumb{display:flex;gap:6px;align-items:center;margin-bottom:12px;color:#8b9dcf}
 </style>
 </head>
 <body>
@@ -33,26 +37,41 @@ body{margin:0;font-family:system-ui;background:radial-gradient(ellipse at top,#1
 <input id="email" type="email" placeholder="correo"><input id="pass" type="password" placeholder="contraseña">
 <button class="btn btn-blue" onclick="login()">Iniciar Sesión</button>
 <div style="margin:12px 0;color:#8b9dcf;font-size:13px">o continuar con</div>
-<button class="btn btn-google" onclick="loginGoogle()"><img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18"> Continuar con Google</button>
-<div style="margin-top:14px;font-size:13px">No tienes cuenta? <a onclick="registrar()" style="color:#2f6bff;cursor:pointer">Regístrate</a></div>
+<button class="btn btn-google" onclick="loginGoogle()">Continuar con Google</button>
+<div style="margin-top:14px;font-size:13px"><a onclick="registrar()" style="color:#2f6bff;cursor:pointer">Regístrate</a></div>
 <div id="msg" style="margin-top:10px;color:#ff8e8e;font-size:13px"></div>
 </div>
 
+<div id="overlay" onclick="closeMenu()"></div>
+<div id="sidebar">
+<h3>☁️ Starmarc</h3>
+<div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
+<button onclick="goFolder('todo');closeMenu()" class="btn" style="text-align:left;background:#1e253e;color:#fff">📁 Todo</button>
+<button onclick="goFolder('imagenes');closeMenu()" class="btn" style="text-align:left;background:#1e253e;color:#fff">🖼️ Imágenes</button>
+<button onclick="goFolder('videos');closeMenu()" class="btn" style="text-align:left;background:#1e253e;color:#fff">🎬 Videos</button>
+<button onclick="goFolder('documentos');closeMenu()" class="btn" style="text-align:left;background:#1e253e;color:#fff">📄 Documentos</button>
+<hr style="border-color:#1e253e">
+<button onclick="logout()" class="btn" style="text-align:left;background:transparent;color:#ff8e8e">Salir</button>
+</div>
+</div>
+
 <div id="app">
-<div class="topbar"><div>☁️ <b>Mis Archivos</b></div><button onclick="document.getElementById('sheet').style.display='block'" style="background:#2f6bff;border:0;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px">+</button></div>
-<input class="search" id="buscar" placeholder="🔍 Buscar en mis archivos..." oninput="filtrarBusqueda()">
-<div class="folders"><button class="active" onclick="filtrarCarpeta('todo',this)">Todo</button><button onclick="filtrarCarpeta('imagenes',this)">Imágenes</button><button onclick="filtrarCarpeta('videos',this)">Videos</button><button onclick="filtrarCarpeta('documentos',this)">Docs</button></div>
+<div class="topbar"><button onclick="openMenu()" style="background:#151a2d;border:1px solid #1e253e;color:#fff;padding:8px 12px;border-radius:10px">☰</button><div><b>☁️ Mis Archivos</b></div><button onclick="document.getElementById('sheet').style.display='block'" style="background:#2f6bff;border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:22px">+</button></div>
+<input class="search" id="buscar" placeholder="🔍 Buscar en mis archivos..." oninput="pintar()">
+<div class="content">
+<div id="breadcrumb" class="breadcrumb"></div>
 <small id="sub" style="color:#8b9dcf">Tus archivos son privados, solo tú los ves</small>
-<div id="lista" style="margin-top:16px">Cargando...</div>
+<div id="lista" style="margin-top:12px">Cargando...</div>
+</div>
 </div>
 
 <div id="sheet" class="sheet">
 <div style="display:flex;justify-content:space-around">
-<button onclick="fileInput.click()"><div>📷</div>Fotos</button>
-<button onclick="fileInput.click()"><div>🎥</div>Videos</button>
-<button onclick="fileInput.click()"><div>📄</div>Archivos</button>
+<button onclick="fileInput.click()" style="background:none;border:0;color:#fff">📷<br>Fotos</button>
+<button onclick="fileInput.click()" style="background:none;border:0;color:#fff">🎬<br>Videos</button>
+<button onclick="fileInput.click()" style="background:none;border:0;color:#fff">📄<br>Archivos</button>
 </div>
-<button onclick="this.parentElement.style.display='none'" style="width:100%;margin-top:12px;color:#aaa;background:none;border:0">Cerrar</button>
+<button onclick="document.getElementById('sheet').style.display='none'" style="width:100%;margin-top:16px;background:none;border:0;color:#aaa">Cerrar</button>
 <input type="file" id="fileInput" hidden multiple onchange="subirFiles(this.files)">
 </div>
 
@@ -62,67 +81,70 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const BUCKET='archivos';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 let todos=[]; let carpetaActiva='todo';
-
+function openMenu(){sidebar.classList.add('open');overlay.classList.add('show')}
+function closeMenu(){sidebar.classList.remove('open');overlay.classList.remove('show')}
 sb.auth.onAuthStateChange((e,s)=>{ if(s){ loginBox.style.display='none'; app.style.display='block'; cargar(); } });
 (async()=>{ const {data}=await sb.auth.getSession(); if(data.session){ loginBox.style.display='none'; app.style.display='block'; cargar(); } })();
-
 async function login(){ const e=email.value.trim(), p=pass.value.trim(); const {error}=await sb.auth.signInWithPassword({email:e,password:p}); if(error) msg.innerText=error.message; }
-async function registrar(){ const e=email.value.trim(), p=pass.value.trim(); if(p.length<6){msg.innerText='Mínimo 6';return;} const {error}=await sb.auth.signUp({email:e,password:p}); if(error) msg.innerText=error.message; else {msg.style.color='#4ade80'; msg.innerText='Cuenta creada';} }
+async function registrar(){ const e=email.value.trim(), p=pass.value.trim(); const {error}=await sb.auth.signUp({email:e,password:p}); if(error) msg.innerText=error.message; }
 function loginGoogle(){ sb.auth.signInWithOAuth({provider:'google', options:{redirectTo: window.location.href}}) }
-
-function getCarpetaPorNombre(nombre){
- const ext=nombre.split('.').pop().toLowerCase();
- if(['jpg','jpeg','png','webp','gif','heic'].includes(ext)) return 'imagenes';
- if(['mp4','mov','avi','webm','mkv'].includes(ext)) return 'videos';
- return 'documentos';
-}
-
+function getCarpeta(n){ const ext=n.split('.').pop().toLowerCase(); if(['jpg','jpeg','png','webp','gif'].includes(ext)) return 'imagenes'; if(['mp4','mov','avi','webm','mkv'].includes(ext)) return 'videos'; return 'documentos'; }
 async function subirFiles(files){
  const {data:{user}}=await sb.auth.getUser();
+ // si está dentro de una carpeta, sube a esa carpeta, si está en todo, detecta automático
  for(let f of files){
   sub.innerText='Subiendo '+f.name+'...';
-  const carpeta=getCarpetaPorNombre(f.name);
-  const ruta=`${user.id}/${carpeta}/${Date.now()}_${f.name}`;
-  const {error}=await sb.storage.from(BUCKET).upload(ruta,f);
-  if(error) alert(error.message);
+  let carp=carpetaActiva=='todo'? getCarpeta(f.name) : carpetaActiva;
+  const ruta=`${user.id}/${carp}/${Date.now()}_${f.name}`;
+  await sb.storage.from(BUCKET).upload(ruta,f);
  }
- document.getElementById('sheet').style.display='none';
- cargar();
+ sheet.style.display='none'; cargar();
 }
-
 async function cargar(){
  const {data:{user}}=await sb.auth.getUser(); if(!user) return;
  todos=[];
- const carpetas=['imagenes','videos','documentos'];
- // listar raiz por si tenias archivos viejos sueltos
- const {data:root}=await sb.storage.from(BUCKET).list(user.id);
- if(root){ for(let it of root){ if(it.metadata){ todos.push({carpeta:'root', file:it, path:`${user.id}/${it.name}`}) } } }
- for(let c of carpetas){
-  const {data}=await sb.storage.from(BUCKET).list(`${user.id}/${c}`);
-  if(data){ for(let f of data){ todos.push({carpeta:c, file:f, path:`${user.id}/${c}/${f.name}`}) } }
+ for(let c of ['imagenes','videos','documentos']){
+  const {data}=await sb.storage.from(BUCKET).list(`${user.id}/${c}`,{limit:100,sortBy:{column:'created_at',order:'desc'}});
+  if(data){ for(let f of data){ if(f.name!='.emptyFolderPlaceholder') todos.push({carpeta:c,file:f,path:`${user.id}/${c}/${f.name}`}) } }
  }
  pintar();
 }
-
+function goFolder(c){ carpetaActiva=c; pintar(); }
 function pintar(){
- let listaFiltrada = carpetaActiva=='todo' ? todos : todos.filter(t=>t.carpeta==carpetaActiva);
+ const l=document.getElementById('lista'); const bc=document.getElementById('breadcrumb');
  const q=buscar.value.toLowerCase();
- if(q) listaFiltrada=listaFiltrada.filter(t=>t.file.name.toLowerCase().includes(q));
- const l=document.getElementById('lista');
- if(listaFiltrada.length==0){ l.innerHTML='No hay archivos en esta carpeta'; return;}
- l.innerHTML=listaFiltrada.map(t=>{
-  const raw=t.file.name;
-  const nombreReal=raw.split('_').slice(1).join('_')||raw; // quita el timestamp
-  const url=`${SUPA_URL}/storage/v1/object/public/${BUCKET}/${t.path}`;
-  const isImg=/\.(jpg|jpeg|png|webp|gif)$/i.test(nombreReal);
-  const isVid=/\.(mp4|mov|webm)$/i.test(nombreReal);
-  let prev=isImg?`<img src="${url}">`:isVid?`<video src="${url}" controls></video>`:`<div style="padding:30px;text-align:center;font-size:30px">📄</div>`;
-  return `<div class="card">${prev}<div style="margin-top:8px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📁 ${t.carpeta} / ${nombreReal}</div><small style="color:#8b9dcf">${(t.file.metadata?.size/1024/1024).toFixed(2)||'0'} MB • ${new Date(t.file.created_at).toLocaleDateString()}</small></div><div class="row"><button class="btn-ver" onclick="window.open('${url}','_blank')">Ver</button><button class="btn-down" onclick="window.open('${url}','_blank')">Descargar</button><button class="btn-x" onclick="borrar('${t.path}')">X</button></div></div>`;
- }).join('');
+ let lista=todos.filter(t=>!q || t.file.name.toLowerCase().includes(q));
+
+ if(carpetaActiva=='todo'){
+  bc.innerHTML=`<span>📁 Mis Archivos</span>`;
+  // Agrupar por carpetas
+  const grupos={};
+  for(let t of lista){ if(!grupos[t.carpeta]) grupos[t.carpeta]=[]; grupos[t.carpeta].push(t); }
+  let html='';
+  for(let carpeta of ['imagenes','videos','documentos']){
+   const count=grupos[carpeta]?.length||0;
+   const icon=carpeta=='imagenes'?'🖼️':carpeta=='videos'?'🎬':'📄';
+   html+=`<div class="folder-card" onclick="goFolder('${carpeta}')"><div><b>${icon} ${carpeta.charAt(0).toUpperCase()+carpeta.slice(1)}</b><br><small style="color:#8b9dcf">${count} archivos</small></div><div>›</div></div>`;
+  }
+  l.innerHTML=html || 'No hay archivos';
+  sub.innerText='Ordenado por carpetas';
+ } else {
+  bc.innerHTML=`<span style="cursor:pointer" onclick="goFolder('todo')">📁 Mis Archivos</span> › <b>${carpetaActiva}</b> <span style="cursor:pointer;margin-left:auto;color:#2f6bff" onclick="goFolder('todo')">← Volver</span>`;
+  let filtrados=lista.filter(t=>t.carpeta==carpetaActiva);
+  sub.innerText=`${filtrados.length} archivos en ${carpetaActiva}`;
+  if(filtrados.length==0){ l.innerHTML='No hay archivos en esta carpeta'; return;}
+  l.innerHTML=filtrados.map(t=>{
+   const raw=t.file.name; const nombreReal=raw.includes('_')? raw.split('_').slice(1).join('_') : raw;
+   const url=`${SUPA_URL}/storage/v1/object/public/${BUCKET}/${t.path}`;
+   const isImg=/\.(jpg|jpeg|png|webp|gif)$/i.test(nombreReal);
+   const isVid=/\.(mp4|mov|webm)$/i.test(nombreReal);
+   let prev=isImg?`<img src="${url}">`:isVid?`<video src="${url}" controls></video>`:`<div style="padding:30px;text-align:center;font-size:30px">📄</div>`;
+   return `<div class="card">${prev}<div style="margin-top:8px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombreReal}</div><small style="color:#8b9dcf">${(t.file.metadata?.size/1024/1024).toFixed(2)} MB • ${new Date(t.file.created_at).toLocaleDateString()}</small></div><div class="row"><button class="btn-ver" onclick="window.open('${url}','_blank')">Ver</button><button class="btn-down" onclick="window.open('${url}','_blank')">Descargar</button><button class="btn-x" onclick="borrar('${t.path}')">X</button></div></div>`;
+  }).join('');
+ }
 }
-function filtrarCarpeta(c,btn){ carpetaActiva=c; document.querySelectorAll('.folders button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); pintar(); }
-function filtrarBusqueda(){ pintar(); }
-async function borrar(fullPath){ if(!confirm('¿Borrar '+fullPath.split('/').pop()+'?')) return; await sb.storage.from(BUCKET).remove([fullPath]); cargar(); }
+async function borrar(p){ if(!confirm('¿Borrar?')) return; await sb.storage.from(BUCKET).remove([p]); cargar(); }
+async function logout(){ await sb.auth.signOut(); location.reload(); }
 </script>
 </body>
 </html>
