@@ -2,90 +2,213 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STARMARC CLOUD OPS - BLUE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Archivos - Starmarc-Ops</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}body{background:#050a14;color:#fff;min-height:100vh}</style>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-[#050a14] text-white min-h-screen">
-<div class="flex">
-<div class="w-[220px] bg-[#080e1f] border-r border-[#0ea5e9]/20 p-4 min-h-screen hidden md:block">
-<div class="flex items-center gap-2 mb-10"><div class="text-[#0ea5e9] text-2xl">★</div><div><p class="font-bold leading-none">Starmarc</p><p class="text-[11px] text-[#38bdf8] tracking-[0.2em]">CLOUD OPS</p></div></div>
-<div class="space-y-1 text-[13px]"><div class="bg-[#0ea5e9]/20 text-[#38bdf8] px-3 py-2 rounded-lg border-l-2 border-[#0ea5e9]">Overview</div></div>
+<body class="bg-[#0f1221] text-white min-h-screen p-4">
+<!-- LOGIN -->
+<div id="authScreen" class="max-w-sm mx-auto mt-20">
+  <h1 class="text-3xl font-extrabold text-center">Starmarc-Ops</h1>
+  <input id="email" type="email" placeholder="Correo" class="w-full mt-6 p-3 rounded-xl bg-[#1e2340] outline-none">
+  <input id="pass" type="password" placeholder="Contraseña 6+ caracteres" class="w-full mt-3 p-3 rounded-xl bg-[#1e2340] outline-none">
+  <p id="msg" class="text-sm text-white/60 mt-2 text-center"></p>
+  <button id="btnLogin" class="w-full mt-4 bg-[#1a73e8] py-3 rounded-full font-bold">Entrar / Registrar</button>
+  <button id="btnGoogle" class="w-full mt-3 bg-white text-black py-3 rounded-full font-bold">Continuar con Google</button>
 </div>
-<div class="flex-1 p-4 md:p-6">
-<div class="flex justify-between items-center mb-2"><h1 class="text-3xl font-extrabold">Overview</h1><div class="bg-[#0a162e] border border-[#0ea5e9] px-3 py-1.5 rounded-lg text-[12px] text-[#38bdf8]">🔒 Bucket Privado Seguro</div></div>
-<p class="text-[13px] text-[#7dd3fc] mb-6 opacity-80">Monitor your cloud operations, users, and storage in real-time • Azul PRO</p>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-<div class="bg-[#0a1226] border border-[#0ea5e9] rounded-xl p-5"><p class="text-[11px] tracking-widest text-[#7dd3fc] mb-2">TOTAL USERS</p><p id="u" class="text-5xl font-extrabold">...</p></div>
-<div class="bg-[#0a1226] border border-[#0ea5e9] rounded-xl p-5"><p class="text-[11px] tracking-widest text-[#7dd3fc] mb-2">TOTAL FILES</p><p id="f" class="text-5xl font-extrabold">...</p></div>
-<div class="bg-[#0a1226] border border-[#0ea5e9] rounded-xl p-5"><p class="text-[11px] tracking-widest text-[#7dd3fc] mb-2">STORAGE USED</p><p class="text-5xl font-extrabold">OK</p></div>
+
+<!-- APP -->
+<div id="appScreen" class="hidden">
+  <div class="flex justify-between items-center">
+    <div>
+      <h2 id="folderTitle" class="text-[26px] font-extrabold">Mis Archivos</h2>
+      <p id="storageText" class="text-xs text-white/50">0 GB de 10 GB</p>
+      <div class="w-32 h-1 bg-white/10 rounded-full mt-1"><div id="storageBar" class="h-1 bg-[#1a73e8] rounded-full" style="width:0%"></div></div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="document.getElementById('fileInput').click()" class="bg-[#1a73e8] w-11 h-11 rounded-full text-2xl">+</button>
+      <button id="btnLogout" class="bg-white/10 w-11 h-11 rounded-full">↪</button>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" hidden multiple>
+  <p id="uploadStatus" class="text-xs text-white/50 mt-3">Tus archivos privados</p>
+  <input id="searchInput" placeholder="🔍 Buscar en mis archivos..." class="w-full mt-3 p-3 rounded-full bg-[#1e2340] outline-none">
+  
+  <div class="flex gap-2 mt-4">
+    <button onclick="currentFolder='all';renderFiles()" class="bg-white/10 px-4 py-2 rounded-full text-xs">Todo</button>
+    <button onclick="currentFolder='images';renderFiles()" class="bg-white/10 px-4 py-2 rounded-full text-xs">Imágenes</button>
+    <button onclick="currentFolder='videos';renderFiles()" class="bg-white/10 px-4 py-2 rounded-full text-xs">Videos</button>
+    <button onclick="currentFolder='docs';renderFiles()" class="bg-white/10 px-4 py-2 rounded-full text-xs">Docs</button>
+  </div>
+
+  <div id="filesGrid" class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-6"></div>
 </div>
-<div class="bg-[#0a1226] border border-[#0ea5e9]/30 rounded-xl overflow-hidden mb-8">
-<div class="p-4 flex justify-between items-center border-b border-[#1e293b]"><h2 class="text-xl font-bold">User Data</h2><div class="text-[11px] text-[#7dd3fc]" id="status">Conectando...</div></div>
-<div id="lista" class="p-4 text-sm">Cargando usuarios...</div>
-</div>
-<div class="bg-[#0a1226] border border-[#0ea5e9]/30 rounded-xl overflow-hidden">
-<div class="p-4 flex justify-between items-center border-b border-[#1e293b]"><h2 class="text-xl font-bold">📁 Archivos - Carpetas + Vista Previa</h2><button onclick="cargar()" class="bg-[#0ea5e9] px-3 py-1 rounded text-[12px]">Actualizar</button></div>
-<div id="lista-archivos" class="p-4">Cargando archivos...</div>
-</div>
-</div>
-</div>
+
 <script>
-const url = "https://cdffffghheikcmstcmcl.supabase.co";
-const key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY";
-const sb = supabase.createClient(url, key);
-function getNombreReal(n){
-  if(n.includes('_')){
-    const p=n.split('_');
-    if(p[0].length>8) return p.slice(1).join('_');
+const SUPABASE_URL = 'TU_SUPABASE_URL';
+const SUPABASE_KEY = 'TU_SUPABASE_ANON_KEY';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const BUCKET = 'archivos';
+const MASTER_EMAIL = 'TU_CORREO_PRINCIPAL@gmail.com';
+const LIMIT_BYTES = 10 * 1024 * 1024 * 1024;
+
+let currentUser = null;
+let allFiles = [];
+let currentFolder = 'all';
+let isRegisterMode = false;
+
+// LOGIN
+document.getElementById('btnLogin').onclick=async()=>{
+  const email=document.getElementById('email').value.trim().toLowerCase();
+  const pass=document.getElementById('pass').value.trim();
+  const msg=document.getElementById('msg');
+  if(!email||pass.length<6){msg.innerText='Correo y 6+ caracteres';return;}
+  msg.innerText=isRegisterMode?'Registrando...':'Entrando...';
+  if(isRegisterMode){
+    const {error}=await supabase.auth.signUp({email,password:pass});
+    if(error){msg.innerText=error.message;return;}
   }
-  return n;
+  const {data,error}=await supabase.auth.signInWithPassword({email,password:pass});
+  if(error){msg.innerText=error.message;return;}
+  const {data:u}=await supabase.auth.getUser();
+  showApp(u.user);
+};
+document.getElementById('btnGoogle').onclick=async()=>{await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});};
+document.getElementById('btnLogout').onclick=async()=>{await supabase.auth.signOut();location.reload();};
+
+function showApp(user){
+  currentUser=user;
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  loadFiles();
 }
-async function cargar(){
-  const {count:cu} = await sb.from('profiles').select('*',{count:'exact',head:true});
-  document.getElementById('u').innerText = cu ?? 0;
-  let todos = [];
-  try{
-    const { data: carpetas } = await sb.storage.from('archivos').list('', { limit: 100 });
-    if(carpetas){
-      for(const item of carpetas){
-        if(item.id){ todos.push({ ...item, carpeta: 'Raiz', fullPath: item.name }); }
-        else {
-          const { data: dentro } = await sb.storage.from('archivos').list(item.name, { limit: 1000 });
-          if(dentro) dentro.filter(x => x.id !== null).forEach(f => { todos.push({ ...f, carpeta: item.name, fullPath: item.name + '/' + f.name }); });
-        }
-      }
-    }
-  }catch(e){}
-  document.getElementById('f').innerText = todos.length;
-  document.getElementById('status').innerText = `✅ ${cu} usuarios • ${todos.length} archivos`;
-  const {data} = await sb.from('profiles').select('full_name,email,created_at').order('created_at',{ascending:false}).limit(20);
-  if(data) document.getElementById('lista').innerHTML = data.map(d=>`<div class="flex items-center justify-between py-3 border-b border-[#1e293b]"><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-[#0ea5e9] flex items-center justify-center font-bold">${(d.full_name||d.email||'U')[0].toUpperCase()}</div><div><p class="font-semibold">${d.full_name||'Usuario'}</p><p class="text-[12px] opacity-60">${d.email}</p></div></div><span class="bg-[#1e293b] px-2 py-1 rounded text-[11px]">${new Date(d.created_at).toLocaleDateString()}</span></div>`).join('');
-  const cont = document.getElementById('lista-archivos');
-  if(todos.length===0){ cont.innerHTML=`<p class="text-center py-6">No hay archivos</p>`; return; }
-  const porCarpeta = {};
-  todos.forEach(f=>{ const c=f.carpeta||'Raiz'; if(!porCarpeta[c]) porCarpeta[c]=[]; porCarpeta[c].push(f); });
-  let html='';
-  for(const [nombreCarpeta, archivos] of Object.entries(porCarpeta)){
-    html+=`<div class="mb-6"><h3 class="text-[14px] font-bold text-[#38bdf8] mb-3">📁 ${nombreCarpeta.toUpperCase()} (${archivos.length})</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
-    archivos.forEach(file=>{
-      const nombreReal=getNombreReal(file.name);
-      const { data } = sb.storage.from('archivos').getPublicUrl(file.fullPath);
-      const publicUrl=data.publicUrl;
-      const ext=nombreReal.split('.').pop().toLowerCase();
-      const esImagen=['jpg','jpeg','png','webp','gif'].includes(ext);
-      const esVideo=['mp4','mov','avi','mkv','webm'].includes(ext);
-      let preview=esImagen?`<img src="${publicUrl}" style="width:60px;height:60px;object-fit:cover;border-radius:10px">`:esVideo?`<video src="${publicUrl}" style="width:60px;height:60px;border-radius:10px" muted></video>`:`<div style="width:60px;height:60px;display:grid;place-items:center;background:#1e293b;border-radius:10px">📄</div>`;
-      html+=`<div style="background:rgba(255,255,255,0.06);border:1px solid rgba(14,165,233,0.2);border-radius:14px;padding:10px;display:flex;align-items:center;gap:12px">${preview}<div style="flex:1;overflow:hidden"><div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombreReal}</div><div style="color:#7dd3fc;font-size:10px;opacity:70%">${file.fullPath}</div></div><a href="${publicUrl}" target="_blank" style="background:#0ea5e9;color:white;padding:6px 12px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700">Ver</a></div>`;
+
+// SUBIDA PRIVADA
+document.getElementById('fileInput').onchange=async(e)=>{
+  const files=e.target.files;
+  if(!files.length||!currentUser)return;
+  const status=document.getElementById('uploadStatus');
+  let totalUsed=allFiles.reduce((a,b)=>a+(b.raw_size||0),0);
+  for(const file of files){
+    if(currentUser.email.toLowerCase()!==MASTER_EMAIL && (totalUsed+file.size)>LIMIT_BYTES){alert('Límite 10GB');break;}
+    status.innerText='Subiendo '+file.name+'...';
+    const safeName=Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const path=currentUser.id+'/'+safeName;
+    const {error}=await supabase.storage.from(BUCKET).upload(path,file);
+    if(error){status.innerText='Error: '+error.message;continue;}
+    totalUsed+=file.size;
+  }
+  loadFiles();
+  status.innerText='Tus archivos privados';
+};
+
+function getFolderType(f){
+  const n=f.name.toLowerCase();
+  if(/\.(png|jpg|jpeg|webp|gif)$/.test(n)||(f.type&&f.type.includes('image')))return'images';
+  if(/\.(mp4|mov|avi|mkv)$/.test(n)||(f.type&&f.type.includes('video')))return'videos';
+  if(/\.(pdf|doc|docx|xls|ppt|txt)$/.test(n))return'docs';
+  return'all';
+}
+
+// ARCHIVO CORREGIDO - SIN DUPLICADO
+async function loadFiles(){
+  if(!currentUser)return;
+  const grid=document.getElementById('filesGrid');
+  grid.innerHTML='<p class="text-white/40 text-center col-span-3 py-10">Cargando tus archivos privados...</p>';
+  let list, error;
+  if(currentUser.email.toLowerCase()===MASTER_EMAIL){
+    const {data:d1,error:e1}=await supabase.storage.from(BUCKET).list('',{limit:100,sortBy:{column:'created_at',order:'desc'}});
+    const {data:d2}=await supabase.storage.from(BUCKET).list(currentUser.id,{limit:100,sortBy:{column:'created_at',order:'desc'}});
+    let combined=[];
+    if(d1) combined=combined.concat(d1.filter(f=>f.name!=='.emptyFolderPlaceholder' && f.id).map(f=>({...f,fullPath:f.name})));
+    if(d2) combined=combined.concat(d2.filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>({...f,fullPath:currentUser.id+'/'+f.name})));
+    list=combined; error=e1;
+  }else{
+    const {data,error:err}=await supabase.storage.from(BUCKET).list(currentUser.id,{limit:100,sortBy:{column:'created_at',order:'desc'}});
+    list=(data||[]).filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>({...f,fullPath:currentUser.id+'/'+f.name}));
+    error=err;
+  }
+  if(error){grid.innerHTML='<p class="text-red-300">'+error.message+'</p>';return;}
+
+  let filesWithUrl=[];
+  for(const f of list){
+    const {data, error:signErr}=await supabase.storage.from(BUCKET).createSignedUrl(f.fullPath, 3600);
+    if(signErr || !data) continue;
+    let displayName=f.name;
+    if(displayName.includes('_')) displayName=displayName.split('_').slice(1).join('_');
+    filesWithUrl.push({
+      name:displayName,
+      storage_path:f.fullPath,
+      size:(f.metadata?.size?(f.metadata.size/1024/1024).toFixed(2)+' MB':''),
+      raw_size:f.metadata?.size||0,
+      type:f.metadata?.mimetype||'',
+      url:data.signedUrl
     });
-    html+=`</div></div>`;
   }
-  cont.innerHTML=html;
+  allFiles=filesWithUrl;
+  renderFiles(); updateStorage();
 }
-cargar();
+
+// ARCHIVO CORREGIDO - CON PREVIEW DE VIDEO
+function renderFiles(){
+  const grid=document.getElementById('filesGrid');
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  let filtered=allFiles;
+  if(currentFolder!=='all') filtered=filtered.filter(f=>getFolderType(f)===currentFolder);
+  if(search) filtered=filtered.filter(f=>f.name.toLowerCase().includes(search));
+  if(!filtered.length){
+    grid.innerHTML='<p class="col-span-3 text-center py-20 text-white/40">No tienes archivos aún. ¡Sube el primero!</p>';
+    return;
+  }
+  grid.innerHTML='';
+  filtered.forEach(f=>{
+    const folder = getFolderType(f);
+    let preview='';
+    if(folder==='images'){
+      preview=`<img src="${f.url}" class="h-[170px] w-full object-cover rounded-xl">`;
+    }else if(folder==='videos'){
+      preview=`<video src="${f.url}" class="h-[170px] w-full object-cover rounded-xl" muted preload="metadata"></video>`;
+    }else{
+      preview=`<div class="h-[170px] bg-white/5 rounded-xl flex items-center justify-center text-4xl">${folder==='docs'?'📄':'📁'}</div>`;
+    }
+    grid.innerHTML+=`<div class="card-file rounded-[20px] p-3 bg-white/5">
+      <div class="overflow-hidden rounded-xl">${preview}</div>
+      <p class="font-bold text-[13px] mt-3 truncate" title="${f.name}">${f.name}</p>
+      <p class="text-[11px] text-white/50">${f.size}</p>
+      <div class="flex gap-2 mt-3">
+        <a href="${f.url}" target="_blank" class="flex-1 bg-white/10 text-center py-2 rounded-full text-xs">Ver</a>
+        <a href="${f.url}" download="${f.name}" class="flex-1 bg-[#1a73e8] text-center py-2 rounded-full text-xs font-bold">Descargar</a>
+        <button onclick="deleteFile('${f.storage_path}')" class="w-8 h-8 bg-red-500/20 rounded-full text-xs">X</button>
+      </div>
+    </div>`;
+  });
+}
+
+function updateStorage(){
+  const total=allFiles.reduce((a,b)=>a+(b.raw_size||0),0);
+  const gb=total/1024/1024/1024;
+  const lim=currentUser.email.toLowerCase()===MASTER_EMAIL?50:10;
+  document.getElementById('storageText').innerText=gb.toFixed(3)+' GB de '+lim+' GB';
+  document.getElementById('storageBar').style.width=Math.min((gb/lim)*100,100)+'%';
+}
+
+window.deleteFile=async(path)=>{
+  if(!confirm('¿Borrar este archivo?'))return;
+  await supabase.storage.from(BUCKET).remove([path]);
+  loadFiles();
+};
+
+document.getElementById('searchInput').addEventListener('input', renderFiles);
+
+(async()=>{
+  const {data}=await supabase.auth.getSession();
+  if(data.session){
+    const {data:u}=await supabase.auth.getUser();
+    if(u.user) showApp(u.user);
+  }
+})();
 </script>
 </body>
 </html>
