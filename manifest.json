@@ -1,0 +1,9 @@
+{
+  "name": "Starmarc Cloud",
+  "short_name": "Starmarc",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a102a",
+  "theme_color": "#0a102a",
+  "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/3771/3771518.png","sizes": "512x512","type": "image/png"}]
+}
