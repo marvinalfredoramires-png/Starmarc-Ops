@@ -4,196 +4,156 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Mis Archivos - Starmars Cloud</title>
+<title>Mis Archivos - Starmarc Cloud</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-  body{background:#0a102a;color:#fff;font-family:system-ui}
-  .glass{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(12px)}
-  .card-dark{background:linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03));border:1px solid rgba(255,255,255,0.12);border-radius:28px;overflow:hidden}
-  .folder{padding:14px 16px;border-radius:16px;cursor:pointer;display:flex;gap:10px;align-items:center;transition:.2s}
-  .folder:hover{background:rgba(255,255,255,0.08)}
-  .folder.active{background:#fff;color:#0a102a;font-weight:800}
-  #sidebar{transform:translateX(-100%);transition:.3s}
-  #sidebar.open{transform:translateX(0)}
-  @media(min-width:768px){#sidebar{transform:translateX(0)}}
+body{background:#0a102a;color:#fff;font-family:system-ui}
+.glass{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(12px)}
+.card-folder{background:#1c244a;border:1px solid rgba(255,255,255,0.08);border-radius:22px;overflow:hidden;transition:.2s}
+.card-folder:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.15)}
+.folder-menu{padding:13px 16px;border-radius:14px;cursor:pointer;display:flex;gap:12px;align-items:center;color:#8da2d6;font-size:14px}
+.folder-menu.active{background:#0eb6ff;color:#fff;font-weight:700}
+.folder-menu:hover{background:rgba(255,255,255,0.06)}
+#sidebar{transform:translateX(-100%);transition:.3s}
+#sidebar.open{transform:translateX(0)}
+@media(min-width:1024px){#sidebar{transform:translateX(0)}}
 </style>
 </head>
-<body class="min-h-screen">
-
-<!-- LOGIN - MISMA LOGICA, DISEÑO AZUL -->
+<body>
 <div id="loginPage" class="min-h-screen flex items-center justify-center p-4">
   <div class="glass rounded-[24px] p-8 w-full max-w-[400px] text-center">
-    <div class="text-5xl mb-3">☁️</div>
-    <h2 class="text-2xl font-black">Mis Archivos</h2>
-    <p class="text-white/60 text-sm mb-6">Starmars Cloud - Búnker Privado</p>
-    <input id="email" type="email" placeholder="correo electronico" class="w-full p-3 rounded-xl bg-white/10 border border-white/10 outline-none mb-3">
+    <div class="text-5xl">☁️</div><h2 class="text-2xl font-black mt-2">Mis Archivos</h2>
+    <p class="text-white/60 text-sm mb-6">Starmarc Cloud - Búnker Privado</p>
+    <input id="email" type="email" placeholder="correo" class="w-full p-3 rounded-xl bg-white/10 border border-white/10 outline-none mb-3">
     <input id="pass" type="password" placeholder="contraseña" class="w-full p-3 rounded-xl bg-white/10 border border-white/10 outline-none">
-    <button class="w-full bg-[#1a6cff] text-white p-3 rounded-xl mt-4 font-bold" onclick="loginEmail()">Iniciar Sesión</button>
-    <div class="flex gap-2 mt-3">
-      <button class="flex-1 glass py-2 rounded-xl text-sm" onclick="loginGoogle()">Google</button>
-      <button class="flex-1 glass py-2 rounded-xl text-sm" onclick="loginFacebook()">Facebook</button>
-    </div>
+    <button class="w-full bg-[#1a6cff] p-3 rounded-xl mt-4 font-bold" onclick="loginEmail()">Iniciar Sesión</button>
     <p id="msg" class="mt-4 text-red-400 text-sm"></p>
   </div>
 </div>
 
-<!-- APP -->
-<div id="appPage" class="hidden min-h-screen">
-  <!-- HEADER AZUL OSCURO COMO TU FOTO 2 -->
-  <header class="sticky top-0 z-20 bg-[#0a102a] border-b border-white/10 px-4 py-4 flex items-center justify-between">
-    <button id="btnMenu" class="w-12 h-12 rounded-full glass flex items-center justify-center"><i class="fa-solid fa-bars"></i></button>
-    <h1 class="font-black text-xl">☁️ Mis Archivos</h1>
-    <button id="btnUploadPlus" class="w-12 h-12 rounded-full bg-[#1a6cff] flex items-center justify-center text-2xl font-bold">+</button>
-  </header>
+<div id="appPage" class="hidden min-h-screen flex">
+  <aside id="sidebar" class="fixed lg:static z-40 top-0 left-0 w-[300px] h-full bg-[#0f1836] border-r border-white/10 p-5 flex flex-col">
+    <div class="mb-6">
+      <div class="flex items-center gap-2 text-white font-black text-xl"><span class="text-2xl">☁️✨</span> Starmarc Cloud</div>
+      <div class="text-[11px] text-white/50 mt-2">Plan Pro • Espacio 12.4 GB / 50 GB</div>
+      <div class="w-full h-1 bg-white/10 rounded-full mt-2"><div class="h-1 bg-[#0eb6ff] rounded-full" style="width:45%"></div></div>
+    </div>
+    <div class="space-y-1">
+      <div class="folder-menu active" onclick="cambiarCarpeta('',this)"><i class="fa-regular fa-folder"></i> Todo</div>
+      <div class="folder-menu" onclick="cambiarCarpeta('imagenes',this)"><i class="fa-regular fa-image"></i> Imagenes</div>
+      <div class="folder-menu" onclick="cambiarCarpeta('videos',this)"><i class="fa-solid fa-video"></i> Videos</div>
+      <div class="folder-menu" onclick="cambiarCarpeta('documentos',this)"><i class="fa-regular fa-file-lines"></i> Documentos</div>
+    </div>
+    <div class="border-t border-white/10 my-6"></div>
+    <div class="space-y-1 text-white/60">
+      <div class="folder-menu"><i class="fa-regular fa-star"></i> Favoritos</div>
+      <div class="folder-menu"><i class="fa-solid fa-share-nodes"></i> Compartidos</div>
+      <div class="folder-menu"><i class="fa-regular fa-clock"></i> Recientes</div>
+    </div>
+    <div class="mt-auto glass rounded-2xl p-3 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-[#0eb6ff] flex items-center justify-center font-bold">JD</div>
+      <div><div class="text-sm font-bold">Juan Díaz</div><div class="text-[11px] text-white/50">juan@email.com</div></div>
+    </div>
+    <button onclick="logout()" class="mt-3 text-xs text-white/50 text-left"><i class="fa-solid fa-gear mr-2"></i> Configuración • Cerrar sesión</button>
+  </aside>
+  <div id="overlay" class="hidden fixed inset-0 bg-black/60 z-30 lg:hidden"></div>
 
-  <div class="flex">
-    <!-- SIDEBAR -->
-    <aside id="sidebar" class="fixed md:static z-30 top-0 left-0 w-[85%] md:w-[280px] h-full md:h-auto bg-[#0a102a] md:bg-transparent p-4 pt-[88px] md:pt-4">
-      <div class="bg-white text-black md:bg-transparent md:text-white rounded-[24px] p-3 md:p-0">
-        <h3 class="font-black px-4 py-3 hidden md:block">☁️ Starmars Cloud</h3>
-        <div class="folder active" onclick="cambiarCarpeta('',this)">📂 Todo</div>
-        <div class="folder" onclick="cambiarCarpeta('imagenes',this)">🖼️ Imágenes</div>
-        <div class="folder" onclick="cambiarCarpeta('videos',this)">🎬 Videos</div>
-        <div class="folder" onclick="cambiarCarpeta('documentos',this)">📄 Documentos</div>
-        <div class="mt-10">
-          <input type="file" id="fileInput" class="hidden">
-          <button onclick="logout()" class="w-full bg-black/10 md:glass py-3 rounded-2xl">Salir</button>
-        </div>
+  <main class="flex-1 min-h-screen">
+    <header class="px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <button id="btnMenu" class="lg:hidden w-10 h-10 rounded-full glass flex items-center justify-center"><i class="fa-solid fa-bars"></i></button>
+        <h1 class="font-black text-xl">Archivos</h1>
       </div>
-    </aside>
-    <div id="overlay" class="hidden fixed inset-0 bg-black/60 z-20 md:hidden"></div>
-
-    <!-- MAIN -->
-    <main id="main" class="flex-1 p-4 md:p-6">
-      <div class="flex justify-between items-center">
-        <h2 id="titulo" class="text-3xl font-black">Todo</h2>
-        <span class="text-white/50 text-sm" id="count"></span>
+      <div class="flex items-center gap-3">
+        <button id="btnUploadPlus" class="w-10 h-10 rounded-full bg-[#1a6cff] flex items-center justify-center font-bold text-xl">+</button>
       </div>
-      
-      <!-- CARPETAS VISUALES -->
-      <div class="flex gap-3 mt-6 overflow-x-auto pb-2">
-        <div class="glass min-w-[110px] h-[90px] rounded-2xl flex flex-col items-center justify-center gap-2"><span class="text-3xl">📁</span><span class="text-xs font-bold">Bodas</span></div>
-        <div class="glass min-w-[110px] h-[90px] rounded-2xl flex flex-col items-center justify-center gap-2"><span class="text-3xl">📁</span><span class="text-xs font-bold">XV Años</span></div>
-        <div class="glass min-w-[110px] h-[90px] rounded-2xl flex flex-col items-center justify-center gap-2"><span class="text-3xl">📁</span><span class="text-xs font-bold">Clientes</span></div>
-      </div>
-
-      <div id="lista" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">Cargando búnker privado...</div>
-    </main>
-  </div>
+    </header>
+    <div class="px-6">
+      <div class="glass rounded-full px-4 py-3 flex items-center gap-3 text-white/40"><i class="fa-solid fa-magnifying-glass"></i><input id="search" placeholder="Buscar en archivos..." class="bg-transparent outline-none text-white text-sm w-full"></div>
+    </div>
+    <div class="p-6">
+      <div class="flex justify-between items-center"><h2 class="font-bold text-lg">Carpetas</h2><span class="text-[#0eb6ff] text-sm">Ver todo ></span></div>
+      <input type="file" id="fileInput" class="hidden">
+      <div id="lista" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">Cargando búnker...</div>
+      <h2 class="font-bold text-lg mt-8">Recientes</h2>
+      <div id="recientes" class="mt-3"></div>
+    </div>
+  </main>
 </div>
 
 <script>
 const SUPABASE_URL = "https://cdffffghheikcmstcmcl.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY";
-const BUCKET = "archivos";
-const SITE_URL = "https://marvinalfredoramires-png.github.io/Starmarc-Ops/";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let uidActual = null;
-let carpetaActual = "";
+const BUCKET = "archivos"; const SITE_URL="https://marvinalfredoramires-png.github.io/Starmarc-Ops/";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let uidActual=null, carpetaActual="", cacheArchivos={imagenes:[],videos:[],documentos:[]};
 
-document.getElementById('btnMenu').onclick = ()=>{ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.remove('hidden'); }
-document.getElementById('overlay').onclick = ()=>{ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.add('hidden'); }
-document.getElementById('btnUploadPlus').onclick = ()=> document.getElementById('fileInput').click();
-document.getElementById('fileInput').onchange = ()=> subir();
+document.getElementById('btnMenu').onclick=()=>{document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.remove('hidden');}
+document.getElementById('overlay').onclick=()=>{document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.add('hidden');}
+document.getElementById('btnUploadPlus').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange=()=>subir();
+document.getElementById('search').oninput=(e)=>filtrar(e.target.value);
 
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session && session.user) mostrarApp(session.user);
-})();
-
-async function loginEmail(){
-  const emailVal = document.getElementById('email').value.trim();
-  const passVal = document.getElementById('pass').value;
-  if(!emailVal || !passVal) return document.getElementById('msg').innerText = "Pon correo y contraseña";
-  const { data, error } = await sb.auth.signInWithPassword({ email: emailVal, password: passVal });
-  if(error) return document.getElementById('msg').innerText = error.message;
-  mostrarApp(data.user);
-}
-async function loginGoogle(){ await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: SITE_URL } }); }
-async function loginFacebook(){ await sb.auth.signInWithOAuth({ provider:'facebook', options:{ redirectTo: SITE_URL } }); }
-
-function mostrarApp(user){
-  uidActual = user.id;
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('appPage').style.display = 'block';
-  cargarArchivos();
-}
-
-function cambiarCarpeta(c, el){
-  carpetaActual = c;
-  document.querySelectorAll('.folder').forEach(f=>f.classList.remove('active'));
-  if(el) el.classList.add('active');
-  document.getElementById('titulo').innerText = c ? c.charAt(0).toUpperCase()+c.slice(1) : 'Todo';
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.add('hidden');
-  cargarArchivos();
-}
+(async()=>{const{data:{session}}=await sb.auth.getSession();if(session?.user) mostrarApp(session.user);})();
+async function loginEmail(){const e=document.getElementById('email').value.trim();const p=document.getElementById('pass').value;if(!e||!p) return document.getElementById('msg').innerText="Pon correo";const{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error) return document.getElementById('msg').innerText=error.message;mostrarApp(data.user);}
+function mostrarApp(u){uidActual=u.id;document.getElementById('loginPage').style.display='none';document.getElementById('appPage').style.display='flex';cargarArchivos();}
+function cambiarCarpeta(c,el){carpetaActual=c;document.querySelectorAll('.folder-menu').forEach(f=>f.classList.remove('active'));if(el) el.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.add('hidden');render();}
 
 async function cargarArchivos(){
-  const lista = document.getElementById('lista');
-  if(!uidActual) return;
-  lista.innerHTML = "Cargando búnker privado...";
-  let todos = [];
-  const buscar = carpetaActual ? [carpetaActual] : ['imagenes','videos','documentos',''];
-  for(const sub of buscar){
-    const prefijo = sub ? `${uidActual}/${sub}` : `${uidActual}`;
-    const { data } = await sb.storage.from(BUCKET).list(prefijo, { limit: 200, sortBy:{ column:'created_at', order:'desc' } });
-    if(data){
-      const filtrados = data.filter(f => f.name !== ".emptyFolderPlaceholder");
-      for(const f of filtrados){
-        if(f.metadata === null && f.id === null) continue;
-        todos.push({ ...f, _carpeta: sub || 'general', _prefijo: prefijo });
+  cacheArchivos={imagenes:[],videos:[],documentos:[]};
+  for(const sub of ['imagenes','videos','documentos']){
+    const {data}=await sb.storage.from(BUCKET).list(`${uidActual}/${sub}`,{limit:200,sortBy:{column:'created_at',order:'desc'}});
+    if(data) cacheArchivos[sub]=data.filter(f=>f.name!==".emptyFolderPlaceholder" && f.id!==null);
+  }
+  render();
+}
+async function getUrl(sub,file){
+  const{data}=await sb.storage.from(BUCKET).createSignedUrl(`${uidActual}/${sub}/${file.name}`,3600);
+  return data?.signedUrl;
+}
+async function render(){
+  const lista=document.getElementById('lista'); const recientes=document.getElementById('recientes'); lista.innerHTML=""; recientes.innerHTML="";
+  if(carpetaActual===""){
+    for(const sub of ['imagenes','videos','documentos']){
+      const files=cacheArchivos[sub]; const ultimo=files[0]; let thumb=`<div class='h-full flex items-center justify-center text-3xl'>${sub==='imagenes'?'🖼️':sub==='videos'?'🎬':'📄'}</div>`;
+      if(ultimo){ const url=await getUrl(sub,ultimo); if(url){ thumb=sub==='videos'?`<video src="${url}" muted class="w-full h-full object-cover"></video>`:`<img src="${url}" class="w-full h-full object-cover">`; } }
+      const size=(files.reduce((a,b)=>a+(b.metadata?.size||0),0)/1024/1024/1024).toFixed(1);
+      const div=document.createElement('div'); div.className="card-folder cursor-pointer"; div.onclick=()=>cambiarCarpeta(sub,document.querySelectorAll('.folder-menu')[['imagenes','videos','documentos'].indexOf(sub)+1]);
+      div.innerHTML=`<div class="h-[140px] bg-[#151e3d] overflow-hidden">${thumb}</div><div class="p-4"><div class="flex items-center gap-2 font-bold"><i class="fa-solid ${sub==='imagenes'?'fa-image':sub==='videos'?'fa-play':'fa-file-lines'} text-[#0eb6ff]"></i> ${sub.charAt(0).toUpperCase()+sub.slice(1)}</div><div class="text-xs text-white/50 mt-1">${files.length} archivos • ${size} GB</div></div>`;
+      lista.appendChild(div);
+    }
+    // Recientes = último de cada carpeta
+    for(const sub of ['imagenes','videos','documentos']){
+      if(cacheArchivos[sub][0]){
+        const f=cacheArchivos[sub][0]; const url=await getUrl(sub,f);
+        const d=document.createElement('div'); d.className="glass rounded-xl p-3 flex justify-between items-center mt-2";
+        d.innerHTML=`<div class="flex items-center gap-3"><div class="w-8 h-8 bg-red-500/20 rounded flex items-center justify-center text-xs">PDF</div><div><div class="text-sm font-bold">${f.name.substring(0,25)}</div><div class="text-xs text-white/50">Modificado hoy • ${(f.metadata?.size/1024/1024).toFixed(2)} MB</div></div></div><a href="${url}" target="_blank" class="text-white/30"><i class="fa-solid fa-ellipsis"></i></a>`;
+        recientes.appendChild(d);
       }
     }
+    return;
   }
-  if(!todos.length){ lista.innerHTML = "<div class='glass rounded-2xl p-10 text-center text-white/50'>Búnker vacío. Dale al + para subir tu primer archivo.</div>"; return; }
-  document.getElementById('count').innerText = todos.length + " archivos";
-  lista.innerHTML = "";
-  for(const f of todos){
-    const fullPath = f._prefijo === uidActual ? `${uidActual}/${f.name}` : `${uidActual}/${f._carpeta}/${f.name}`;
-    const { data:signed } = await sb.storage.from(BUCKET).createSignedUrl(fullPath, 3600);
-    if(!signed) continue;
-    let nombreReal = f.name;
-    if(nombreReal.includes("-")){
-      const sinTime = nombreReal.substring(nombreReal.indexOf("-")+1);
-      if(sinTime.length > 2) nombreReal = sinTime;
-    }
-    const isVideo = f.name.toLowerCase().match(/\.(mp4|mov|webm|m4v)$/);
-    lista.innerHTML += `
-      <div class="card-dark p-3">
-        <div class="bg-[#1c244a] rounded-[20px] h-[190px] flex items-center justify-center overflow-hidden">
-          ${isVideo ? `<video src="${signed.signedUrl}" preload="metadata" controls playsinline muted class="w-full h-full object-cover"></video>` : `<img src="${signed.signedUrl}" loading="lazy" class="w-full h-full object-cover">`}
-        </div>
-        <div class="p-2">
-          <div class="name text-white font-bold truncate text-[14px]" title="${nombreReal}">${nombreReal}</div>
-          <small class="text-white/50">${f._carpeta} • ${(f.metadata?.size/1024/1024).toFixed(2) || '2.90'} MB</small>
-          <div class="flex gap-2 mt-3">
-            <a href="${signed.signedUrl}" target="_blank" class="flex-1 glass py-2 rounded-full text-center text-sm">Ver</a>
-            <a href="${signed.signedUrl}" download class="flex-1 bg-[#1a6cff] py-2 rounded-full text-center text-sm font-bold">Descargar</a>
-          </div>
-        </div>
-      </div>`;
+  // Dentro carpeta
+  const archivos=cacheArchivos[carpetaActual]; if(!archivos.length){ lista.innerHTML=`<div class='glass rounded-2xl p-10 text-center text-white/50 col-span-full'>Carpeta vacía. Dale al +</div>`; return; }
+  for(const f of archivos){
+    const url=await getUrl(carpetaActual,f); if(!url) continue;
+    const nombre=f.name.includes("-")?f.name.substring(f.name.indexOf("-")+1):f.name;
+    const card=document.createElement('div'); card.className="card-folder p-3";
+    card.innerHTML=`<div class="bg-[#151e3d] rounded-xl h-[150px] overflow-hidden">${carpetaActual==='videos'?`<video src="${url}" controls muted class="w-full h-full object-cover"></video>`:`<img src="${url}" class="w-full h-full object-cover">`}</div><div class="p-2"><div class="font-bold truncate text-sm">${nombre}</div><div class="flex gap-2 mt-2"><a href="${url}" target="_blank" class="flex-1 glass py-2 rounded-full text-center text-xs">Ver</a><a href="${url}" download class="flex-1 bg-[#1a6cff] py-2 rounded-full text-center text-xs font-bold">Descargar</a></div></div>`;
+    lista.appendChild(card);
   }
 }
-
+function filtrar(q){ /* opcional buscar */ }
 async function subir(){
-  const input = document.getElementById('fileInput');
-  const file = input.files[0];
-  if(!file) return;
-  const ext = file.name.split('.').pop().toLowerCase();
-  let sub = "documentos";
-  if(['jpg','jpeg','png','webp','heic','gif'].includes(ext)) sub = "imagenes";
-  if(['mp4','mov','webm','m4v','avi'].includes(ext)) sub = "videos";
-  const path = `${uidActual}/${sub}/${Date.now()}-${file.name}`;
-  const { error } = await sb.storage.from(BUCKET).upload(path, file);
-  if(error) return alert(error.message);
-  input.value = "";
-  cambiarCarpeta(sub, document.querySelectorAll('.folder')[sub==='imagenes'?1:sub==='videos'?2:3]);
+  const input=document.getElementById('fileInput'); const file=input.files[0]; if(!file) return;
+  const ext=file.name.split('.').pop().toLowerCase(); let sub="documentos"; if(['jpg','jpeg','png','webp','heic','gif'].includes(ext)) sub="imagenes"; if(['mp4','mov','webm','m4v','avi'].includes(ext)) sub="videos";
+  const destino=carpetaActual?carpetaActual:sub;
+  const {error}=await sb.storage.from(BUCKET).upload(`${uidActual}/${destino}/${Date.now()}-${file.name}`,file); if(error) return alert(error.message);
+  input.value=""; await cargarArchivos(); cambiarCarpeta(destino,document.querySelectorAll('.folder-menu')[destino==='imagenes'?1:destino==='videos'?2:3]);
 }
-
-async function logout(){ await sb.auth.signOut(); location.reload(); }
+async function logout(){await sb.auth.signOut();location.reload();}
 </script>
 </body>
 </html>
