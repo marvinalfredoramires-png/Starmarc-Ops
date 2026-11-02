@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Starmarc Cloud</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a102a">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -64,7 +67,6 @@ body{background:#0a102a;color:#fff;font-family:system-ui}
   </main>
 </div>
 
-<!-- MODAL AJUSTES - NUEVO -->
 <div id="modalAjustes" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
   <div class="bg-[#101a3a] border border-white/10 rounded-[24px] w-full max-w-[420px] p-6">
     <div class="flex justify-between items-center mb-6"><h2 class="font-black text-xl">⚙️ Ajustes</h2><button onclick="cerrarAjustes()" class="w-9 h-9 rounded-full glass flex items-center justify-center">✕</button></div>
@@ -73,7 +75,6 @@ body{background:#0a102a;color:#fff;font-family:system-ui}
       <div class="glass rounded-2xl p-4"><div class="text-xs text-white/50 uppercase">Almacenamiento REAL</div><div class="flex justify-between mt-3 text-sm"><span>🖼️ Imágenes</span><span id="countImg">0</span></div><div class="flex justify-between mt-2 text-sm"><span>🎬 Videos</span><span id="countVid">0</span></div><div class="flex justify-between mt-2 text-sm"><span>📄 Documentos</span><span id="countDoc">0</span></div><div class="mt-4 w-full h-2 bg-white/10 rounded-full"><div id="barraAjustes" class="h-2 bg-[#0eb6ff] rounded-full" style="width:10%"></div></div><div id="totalUso" class="text-[11px] text-white/50 mt-2">0 MB</div></div>
       <button onclick="cambiarPass()" class="w-full glass py-3 rounded-xl text-sm font-bold">🔑 Cambiar contraseña</button>
       <button onclick="borrarTodo()" class="w-full bg-red-500/10 border border-red-500/20 text-red-300 py-3 rounded-xl text-sm font-bold">🗑️ Borrar todo mi búnker</button>
-      <div class="text-[11px] text-white/20 text-center pt-2">Starmarc Ops • Datos Reales</div>
     </div>
   </div>
 </div>
@@ -87,7 +88,7 @@ let uidActual=null, carpetaActual="", cacheArchivos={imagenes:[],videos:[],docum
 
 document.getElementById('btnMenu').onclick=()=>{document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.remove('hidden');}
 document.getElementById('overlay').onclick=()=>{document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.add('hidden');}
-document.getElementById('btnUploadPlus').onclick=()=>document.getElementById('fileInput')?document.getElementById('fileInput').click():document.createElement('input').click();
+document.getElementById('btnUploadPlus').onclick=()=>fileInput.click();
 const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.id='fileInput'; fileInput.style.display='none'; document.body.appendChild(fileInput);
 fileInput.onchange=()=>subir();
 
@@ -95,7 +96,6 @@ fileInput.onchange=()=>subir();
 async function loginEmail(){const e=document.getElementById('email').value.trim();const p=document.getElementById('pass').value;if(!e||!p) return document.getElementById('msg').innerText="Pon correo";const{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error) return document.getElementById('msg').innerText=error.message;mostrarApp(data.user);}
 function mostrarApp(u){uidActual=u.id;userActual=u;document.getElementById('loginPage').style.display='none';document.getElementById('appPage').style.display='flex';document.getElementById('userEmail').innerText=u.email;document.getElementById('userNombre').innerText=u.email.split('@')[0];document.getElementById('avatar').innerText=u.email[0].toUpperCase();cargarArchivos();}
 function cambiarCarpeta(c,el){carpetaActual=c;document.querySelectorAll('.folder-menu').forEach(f=>f.classList.remove('active'));if(el) el.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.add('hidden');render();}
-
 async function cargarArchivos(){
   cacheArchivos={imagenes:[],videos:[],documentos:[]};
   let total=0;
@@ -128,7 +128,7 @@ async function render(){
     return;
   }
   const archivos=cacheArchivos[carpetaActual]||[]; document.getElementById('titulo').innerText=carpetaActual;
-  if(!archivos.length){ lista.innerHTML=`<div class='glass p-10 text-center rounded-2xl'>Vacía</div>`; return; }
+  if(!archivos.length){ lista.innerHTML=`<div class='glass p-10 text-center rounded-2xl'>Vacía - dale al + para subir</div>`; return; }
   for(const f of archivos){
     const url=await getUrl(carpetaActual,f); if(!url) continue;
     const nombre=f.name.split('-').slice(1).join('-')||f.name;
@@ -139,18 +139,25 @@ async function render(){
 }
 async function subir(){
   const file=fileInput.files[0]; if(!file) return;
-  const ext=file.name.split('.').pop().toLowerCase(); let sub="documentos"; if(['jpg','jpeg','png','webp','heic','gif'].includes(ext)) sub="imagenes"; if(['mp4','mov','webm','avi'].includes(ext)) sub="videos";
+  const lista=document.getElementById('lista');
+  lista.innerHTML=`<div class='glass p-10 text-center rounded-2xl'>⏳ Subiendo ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)... no cierres</div>`;
+  const ext=file.name.split('.').pop().toLowerCase(); 
+  let sub="documentos"; 
+  if(['jpg','jpeg','png','webp','heic','gif','bmp'].includes(ext)) sub="imagenes"; 
+  if(['mp4','mov','webm','avi','mkv','3gp'].includes(ext)) sub="videos";
   const dest=carpetaActual||sub;
   const {error}=await sb.storage.from(BUCKET).upload(`${uidActual}/${dest}/${Date.now()}-${file.name}`, file, {upsert:true});
-  if(error) alert(error.message); fileInput.value=""; await cargarArchivos(); cambiarCarpeta(dest, document.querySelectorAll('.folder-menu')[dest==='imagenes'?1:dest==='videos'?2:3]);
+  if(error){ alert("Error al subir: "+error.message); lista.innerHTML="Error"; }
+  fileInput.value=""; 
+  await cargarArchivos(); 
+  cambiarCarpeta(dest, document.querySelectorAll('.folder-menu')[dest==='imagenes'?1:dest==='videos'?2:3]);
 }
 async function limpiarSueltos(){
-  if(!confirm("¿Borrar archivos que están sueltos fuera de carpetas para limpiar el desorden?")) return;
+  if(!confirm("¿Borrar archivos sueltos?")) return;
   const {data}=await sb.storage.from(BUCKET).list(`${uidActual}`,{limit:100});
   if(data){ for(const f of data){ if(!['imagenes','videos','documentos'].includes(f.name) && f.name!==".emptyFolderPlaceholder"){ await sb.storage.from(BUCKET).remove([`${uidActual}/${f.name}`]); } } }
   alert("Limpieza hecha"); cargarArchivos();
 }
-// --- SOLO ESTO ES NUEVO ---
 function abrirAjustes(){
   document.getElementById('modalAjustes').classList.remove('hidden');
   document.getElementById('ajustesEmail').innerText=userActual?.email||document.getElementById('userEmail').innerText;
@@ -164,8 +171,9 @@ function abrirAjustes(){
 }
 function cerrarAjustes(){document.getElementById('modalAjustes').classList.add('hidden');}
 async function cambiarPass(){const n=prompt("Nueva contraseña (min 6):");if(!n||n.length<6)return alert("Muy corta");const{error}=await sb.auth.updateUser({password:n});if(error)alert(error.message);else alert("Cambiada ✅");}
-async function borrarTodo(){if(!confirm("¿Borrar TODO tu búnker? No se puede recuperar"))return;if(!confirm("Última confirmación ¿Borrar TODO?"))return;for(const s of ['imagenes','videos','documentos']){for(const f of cacheArchivos[s]){await sb.storage.from(BUCKET).remove([`${uidActual}/${s}/${f.name}`]);}}alert("Búnker limpio");cerrarAjustes();cargarArchivos();}
+async function borrarTodo(){if(!confirm("¿Borrar TODO?"))return;for(const s of ['imagenes','videos','documentos']){for(const f of cacheArchivos[s]){await sb.storage.from(BUCKET).remove([`${uidActual}/${s}/${f.name}`]);}}alert("Búnker limpio");cerrarAjustes();cargarArchivos();}
 async function logout(){await sb.auth.signOut(); location.reload();}
 </script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
 </body>
 </html>
