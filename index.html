@@ -42,12 +42,15 @@ body{background:#0a102a;color:#fff;font-family:system-ui}
       <div class="folder-menu" onclick="cambiarCarpeta('videos',this)"><i class="fa-solid fa-video"></i> Videos</div>
       <div class="folder-menu" onclick="cambiarCarpeta('documentos',this)"><i class="fa-regular fa-file-lines"></i> Documentos</div>
     </div>
-    <div class="mt-auto glass rounded-2xl p-3 flex items-center gap-3">
-      <div id="avatar" class="w-10 h-10 rounded-full bg-[#0eb6ff] flex items-center justify-center font-bold">U</div>
-      <div><div id="userNombre" class="text-sm font-bold">Usuario</div><div id="userEmail" class="text-[11px] text-white/50">...</div></div>
+    <div class="mt-auto space-y-3">
+      <button onclick="abrirAjustes()" class="w-full glass py-3 rounded-xl text-sm font-bold flex items-center gap-3 px-4"><i class="fa-solid fa-gear"></i> Configuración / Ajustes</button>
+      <div class="glass rounded-2xl p-3 flex items-center gap-3">
+        <div id="avatar" class="w-10 h-10 rounded-full bg-[#0eb6ff] flex items-center justify-center font-bold">U</div>
+        <div><div id="userNombre" class="text-sm font-bold">Usuario</div><div id="userEmail" class="text-[11px] text-white/50">...</div></div>
+      </div>
+      <button onclick="logout()" class="mt-1 text-xs text-white/50">Cerrar sesión</button>
+      <button onclick="limpiarSueltos()" class="mt-1 text-[11px] text-red-300/50 underline w-full text-left">Limpiar archivos sueltos</button>
     </div>
-    <button onclick="logout()" class="mt-3 text-xs text-white/50">Cerrar sesión</button>
-    <button onclick="limpiarSueltos()" class="mt-2 text-[11px] text-red-300/50 underline">Limpiar archivos sueltos</button>
   </aside>
   <div id="overlay" class="hidden fixed inset-0 bg-black/60 z-30 lg:hidden"></div>
   <main class="flex-1 min-h-screen">
@@ -60,12 +63,27 @@ body{background:#0a102a;color:#fff;font-family:system-ui}
     <div class="p-6"><div id="lista" class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">Cargando...</div></div>
   </main>
 </div>
+
+<!-- MODAL AJUSTES - NUEVO -->
+<div id="modalAjustes" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-[#101a3a] border border-white/10 rounded-[24px] w-full max-w-[420px] p-6">
+    <div class="flex justify-between items-center mb-6"><h2 class="font-black text-xl">⚙️ Ajustes</h2><button onclick="cerrarAjustes()" class="w-9 h-9 rounded-full glass flex items-center justify-center">✕</button></div>
+    <div class="space-y-4">
+      <div class="glass rounded-2xl p-4"><div class="text-xs text-white/50 uppercase">Cuenta</div><div id="ajustesEmail" class="font-bold text-sm mt-2">...</div><div id="ajustesUid" class="text-[10px] text-white/30 mt-1 break-all">ID: ...</div></div>
+      <div class="glass rounded-2xl p-4"><div class="text-xs text-white/50 uppercase">Almacenamiento REAL</div><div class="flex justify-between mt-3 text-sm"><span>🖼️ Imágenes</span><span id="countImg">0</span></div><div class="flex justify-between mt-2 text-sm"><span>🎬 Videos</span><span id="countVid">0</span></div><div class="flex justify-between mt-2 text-sm"><span>📄 Documentos</span><span id="countDoc">0</span></div><div class="mt-4 w-full h-2 bg-white/10 rounded-full"><div id="barraAjustes" class="h-2 bg-[#0eb6ff] rounded-full" style="width:10%"></div></div><div id="totalUso" class="text-[11px] text-white/50 mt-2">0 MB</div></div>
+      <button onclick="cambiarPass()" class="w-full glass py-3 rounded-xl text-sm font-bold">🔑 Cambiar contraseña</button>
+      <button onclick="borrarTodo()" class="w-full bg-red-500/10 border border-red-500/20 text-red-300 py-3 rounded-xl text-sm font-bold">🗑️ Borrar todo mi búnker</button>
+      <div class="text-[11px] text-white/20 text-center pt-2">Starmarc Ops • Datos Reales</div>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL="https://cdffffghheikcmstcmcl.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZmZmZmdoaGVpa2Ntc3RjbWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTE1MzEsImV4cCI6MjEwODQ2NzUzMX0._UMIkvrkJHST29yyV9lBzfFxMg_8Ovi-0qd0Nk3fQrY";
 const BUCKET="archivos";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let uidActual=null, carpetaActual="", cacheArchivos={imagenes:[],videos:[],documentos:[]};
+let uidActual=null, carpetaActual="", cacheArchivos={imagenes:[],videos:[],documentos:[]}, userActual=null;
 
 document.getElementById('btnMenu').onclick=()=>{document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.remove('hidden');}
 document.getElementById('overlay').onclick=()=>{document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.add('hidden');}
@@ -75,7 +93,7 @@ fileInput.onchange=()=>subir();
 
 (async()=>{const{data:{session}}=await sb.auth.getSession();if(session?.user) mostrarApp(session.user);})();
 async function loginEmail(){const e=document.getElementById('email').value.trim();const p=document.getElementById('pass').value;if(!e||!p) return document.getElementById('msg').innerText="Pon correo";const{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error) return document.getElementById('msg').innerText=error.message;mostrarApp(data.user);}
-function mostrarApp(u){uidActual=u.id;document.getElementById('loginPage').style.display='none';document.getElementById('appPage').style.display='flex';document.getElementById('userEmail').innerText=u.email;document.getElementById('userNombre').innerText=u.email.split('@')[0];document.getElementById('avatar').innerText=u.email[0].toUpperCase();cargarArchivos();}
+function mostrarApp(u){uidActual=u.id;userActual=u;document.getElementById('loginPage').style.display='none';document.getElementById('appPage').style.display='flex';document.getElementById('userEmail').innerText=u.email;document.getElementById('userNombre').innerText=u.email.split('@')[0];document.getElementById('avatar').innerText=u.email[0].toUpperCase();cargarArchivos();}
 function cambiarCarpeta(c,el){carpetaActual=c;document.querySelectorAll('.folder-menu').forEach(f=>f.classList.remove('active'));if(el) el.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.add('hidden');render();}
 
 async function cargarArchivos(){
@@ -97,7 +115,6 @@ async function render(){
   const lista=document.getElementById('lista'); lista.innerHTML="";
   if(carpetaActual===""){
     document.getElementById('titulo').innerText="Carpetas";
-    // SOLO CARPETAS, NADA SUELTO
     for(const sub of ['imagenes','videos','documentos']){
       const files=cacheArchivos[sub]||[]; const ultimo=files[0];
       let thumb=`<div class='h-full w-full bg-[#151e3d] flex items-center justify-center text-4xl opacity-50'>${sub==='imagenes'?'🖼️':sub==='videos'?'🎬':'📄'}</div>`;
@@ -110,7 +127,6 @@ async function render(){
     }
     return;
   }
-  // DENTRO DE CARPETA
   const archivos=cacheArchivos[carpetaActual]||[]; document.getElementById('titulo').innerText=carpetaActual;
   if(!archivos.length){ lista.innerHTML=`<div class='glass p-10 text-center rounded-2xl'>Vacía</div>`; return; }
   for(const f of archivos){
@@ -134,6 +150,21 @@ async function limpiarSueltos(){
   if(data){ for(const f of data){ if(!['imagenes','videos','documentos'].includes(f.name) && f.name!==".emptyFolderPlaceholder"){ await sb.storage.from(BUCKET).remove([`${uidActual}/${f.name}`]); } } }
   alert("Limpieza hecha"); cargarArchivos();
 }
+// --- SOLO ESTO ES NUEVO ---
+function abrirAjustes(){
+  document.getElementById('modalAjustes').classList.remove('hidden');
+  document.getElementById('ajustesEmail').innerText=userActual?.email||document.getElementById('userEmail').innerText;
+  document.getElementById('ajustesUid').innerText='ID: '+uidActual;
+  document.getElementById('countImg').innerText=(cacheArchivos.imagenes?.length||0)+' archivos';
+  document.getElementById('countVid').innerText=(cacheArchivos.videos?.length||0)+' archivos';
+  document.getElementById('countDoc').innerText=(cacheArchivos.documentos?.length||0)+' archivos';
+  const total=Object.values(cacheArchivos).flat().reduce((a,b)=>a+(b.metadata?.size||0),0);
+  document.getElementById('totalUso').innerText=`${(total/1024/1024).toFixed(1)} MB / 50 GB usados`;
+  document.getElementById('barraAjustes').style.width=document.getElementById('barraUso').style.width;
+}
+function cerrarAjustes(){document.getElementById('modalAjustes').classList.add('hidden');}
+async function cambiarPass(){const n=prompt("Nueva contraseña (min 6):");if(!n||n.length<6)return alert("Muy corta");const{error}=await sb.auth.updateUser({password:n});if(error)alert(error.message);else alert("Cambiada ✅");}
+async function borrarTodo(){if(!confirm("¿Borrar TODO tu búnker? No se puede recuperar"))return;if(!confirm("Última confirmación ¿Borrar TODO?"))return;for(const s of ['imagenes','videos','documentos']){for(const f of cacheArchivos[s]){await sb.storage.from(BUCKET).remove([`${uidActual}/${s}/${f.name}`]);}}alert("Búnker limpio");cerrarAjustes();cargarArchivos();}
 async function logout(){await sb.auth.signOut(); location.reload();}
 </script>
 </body>
