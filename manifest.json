@@ -1,9 +1,23 @@
 {
-  "name": "Starmarc Cloud",
-  "short_name": "Starmarc",
-  "start_url": "./",
+  "name": "Starmarc Cloud - Búnker Privado",
+  "short_name": "StarmarcCloud",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a102a",
   "theme_color": "#0a102a",
-  "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/3771/3771518.png","sizes": "512x512","type": "image/png"}]
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
