@@ -2,11 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Starmarc Cloud</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0a102a">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -29,6 +30,8 @@ body{background:#0a102a;color:#fff;font-family:system-ui}
     <input id="email" type="email" placeholder="correo" class="w-full p-3 rounded-xl bg-white/10 border border-white/10 outline-none mb-3">
     <input id="pass" type="password" placeholder="contraseña" class="w-full p-3 rounded-xl bg-white/10 border border-white/10 outline-none">
     <button class="w-full bg-[#1a6cff] p-3 rounded-xl mt-4 font-bold" onclick="loginEmail()">Iniciar</button>
+    <button class="w-full glass p-3 rounded-xl mt-3 font-bold text-sm" onclick="registrar()">Registrarse</button>
+    <button class="w-full bg-white text-black p-3 rounded-xl mt-3 font-bold text-sm flex items-center justify-center gap-2" onclick="loginGoogle()"><i class="fa-brands fa-google"></i> Continuar con Google</button>
     <p id="msg" class="mt-4 text-red-400 text-sm"></p>
   </div>
 </div>
@@ -67,12 +70,27 @@ body{background:#0a102a;color:#fff;font-family:system-ui}
   </main>
 </div>
 
-<div id="modalAjustes" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="bg-[#101a3a] border border-white/10 rounded-[24px] w-full max-w-[420px] p-6">
+<div id="modalAjustes" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-[#101a3a] border border-white/10 rounded-[24px] w-full max-w-[420px] p-6 my-6">
     <div class="flex justify-between items-center mb-6"><h2 class="font-black text-xl">⚙️ Ajustes</h2><button onclick="cerrarAjustes()" class="w-9 h-9 rounded-full glass flex items-center justify-center">✕</button></div>
     <div class="space-y-4">
       <div class="glass rounded-2xl p-4"><div class="text-xs text-white/50 uppercase">Cuenta</div><div id="ajustesEmail" class="font-bold text-sm mt-2">...</div><div id="ajustesUid" class="text-[10px] text-white/30 mt-1 break-all">ID: ...</div></div>
       <div class="glass rounded-2xl p-4"><div class="text-xs text-white/50 uppercase">Almacenamiento REAL</div><div class="flex justify-between mt-3 text-sm"><span>🖼️ Imágenes</span><span id="countImg">0</span></div><div class="flex justify-between mt-2 text-sm"><span>🎬 Videos</span><span id="countVid">0</span></div><div class="flex justify-between mt-2 text-sm"><span>📄 Documentos</span><span id="countDoc">0</span></div><div class="mt-4 w-full h-2 bg-white/10 rounded-full"><div id="barraAjustes" class="h-2 bg-[#0eb6ff] rounded-full" style="width:10%"></div></div><div id="totalUso" class="text-[11px] text-white/50 mt-2">0 MB</div></div>
+      
+      <div class="glass rounded-2xl p-4 border border-[#0eb6ff]/30">
+        <div class="text-xs text-white/50 uppercase mb-3">📱 COPIA DE SEGURIDAD DEL TELÉFONO</div>
+        <div id="txtUltimaCopia" class="text-sm font-bold">Última copia: Nunca</div>
+        <button onclick="guardarBackupAhora()" class="w-full bg-[#0eb6ff] py-3 rounded-xl text-sm font-black mt-3">Guardar copia de seguridad ahora</button>
+        <div class="grid grid-cols-3 gap-2 mt-3">
+          <button onclick="backupWhatsapp()" class="glass py-2 rounded-xl text-[11px]">💬 WhatsApp</button>
+          <button onclick="backupFotos()" class="glass py-2 rounded-xl text-[11px]">🖼️ Fotos/Video</button>
+          <button onclick="backupContactos()" class="glass py-2 rounded-xl text-[11px]">👥 Contactos</button>
+        </div>
+        <div class="text-[10px] text-white/40 mt-2">Se guarda en backups/{usuario}/ • Auto a las 2 AM</div>
+        <button onclick="verBackups()" class="w-full glass py-2 rounded-xl text-xs mt-2">Ver copias / Restaurar</button>
+        <div id="listaBackups" class="mt-3 space-y-2 max-h-[150px] overflow-auto"></div>
+      </div>
+
       <button onclick="cambiarPass()" class="w-full glass py-3 rounded-xl text-sm font-bold">🔑 Cambiar contraseña</button>
       <button onclick="borrarTodo()" class="w-full bg-red-500/10 border border-red-500/20 text-red-300 py-3 rounded-xl text-sm font-bold">🗑️ Borrar todo mi búnker</button>
     </div>
@@ -94,7 +112,9 @@ fileInput.onchange=()=>subir();
 
 (async()=>{const{data:{session}}=await sb.auth.getSession();if(session?.user) mostrarApp(session.user);})();
 async function loginEmail(){const e=document.getElementById('email').value.trim();const p=document.getElementById('pass').value;if(!e||!p) return document.getElementById('msg').innerText="Pon correo";const{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error) return document.getElementById('msg').innerText=error.message;mostrarApp(data.user);}
-function mostrarApp(u){uidActual=u.id;userActual=u;document.getElementById('loginPage').style.display='none';document.getElementById('appPage').style.display='flex';document.getElementById('userEmail').innerText=u.email;document.getElementById('userNombre').innerText=u.email.split('@')[0];document.getElementById('avatar').innerText=u.email[0].toUpperCase();cargarArchivos();}
+async function registrar(){const e=document.getElementById('email').value.trim();const p=document.getElementById('pass').value;if(!e||!p) return document.getElementById('msg').innerText="Pon correo y pass";const{data,error}=await sb.auth.signUp({email:e,password:p});if(error) return document.getElementById('msg').innerText=error.message;document.getElementById('msg').innerText="Cuenta creada ✅ revisa tu correo"; if(data.user) mostrarApp(data.user);}
+async function loginGoogle(){const {error}=await sb.auth.signInWithOAuth({provider:'google', options:{redirectTo:'starmarccloud://login-callback'}}); if(error) document.getElementById('msg').innerText=error.message;}
+function mostrarApp(u){uidActual=u.id;userActual=u;document.getElementById('loginPage').style.display='none';document.getElementById('appPage').style.display='flex';document.getElementById('userEmail').innerText=u.email;document.getElementById('userNombre').innerText=u.email.split('@')[0];document.getElementById('avatar').innerText=u.email[0].toUpperCase();cargarArchivos(); actualizarUltimaCopia(); iniciarAutoBackup();}
 function cambiarCarpeta(c,el){carpetaActual=c;document.querySelectorAll('.folder-menu').forEach(f=>f.classList.remove('active'));if(el) el.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.add('hidden');render();}
 async function cargarArchivos(){
   cacheArchivos={imagenes:[],videos:[],documentos:[]};
@@ -168,11 +188,62 @@ function abrirAjustes(){
   const total=Object.values(cacheArchivos).flat().reduce((a,b)=>a+(b.metadata?.size||0),0);
   document.getElementById('totalUso').innerText=`${(total/1024/1024).toFixed(1)} MB / 50 GB usados`;
   document.getElementById('barraAjustes').style.width=document.getElementById('barraUso').style.width;
+  actualizarUltimaCopia();
 }
 function cerrarAjustes(){document.getElementById('modalAjustes').classList.add('hidden');}
 async function cambiarPass(){const n=prompt("Nueva contraseña (min 6):");if(!n||n.length<6)return alert("Muy corta");const{error}=await sb.auth.updateUser({password:n});if(error)alert(error.message);else alert("Cambiada ✅");}
 async function borrarTodo(){if(!confirm("¿Borrar TODO?"))return;for(const s of ['imagenes','videos','documentos']){for(const f of cacheArchivos[s]){await sb.storage.from(BUCKET).remove([`${uidActual}/${s}/${f.name}`]);}}alert("Búnker limpio");cerrarAjustes();cargarArchivos();}
 async function logout(){await sb.auth.signOut(); location.reload();}
+
+// === NUEVO: COPIA DE SEGURIDAD ===
+function actualizarUltimaCopia(){const f=localStorage.getItem('ultimaCopia_'+uidActual); document.getElementById('txtUltimaCopia').innerText=f?`Última copia: ${f}`:'Última copia: Nunca';}
+async function subirBackup(file, tipo){
+  if(!file) return;
+  const path=`${uidActual}/backups/${tipo}/${Date.now()}-${file.name}`;
+  const {error}=await sb.storage.from(BUCKET).upload(path,file,{upsert:true});
+  if(error) alert(error.message); else { const ahora=new Date().toLocaleString(); localStorage.setItem('ultimaCopia_'+uidActual, ahora); actualizarUltimaCopia(); alert(`${tipo} guardado en backups ✅`); }
+}
+function backupWhatsapp(){
+  const i=document.createElement('input'); i.type='file'; i.accept='.db,.crypt14,.crypt12';
+  i.onchange=()=>subirBackup(i.files[0],'whatsapp-msgstore'); i.click();
+}
+function backupFotos(){
+  const i=document.createElement('input'); i.type='file'; i.multiple=true; i.accept='image/*,video/*';
+  i.onchange=async()=>{ for(const f of i.files){ await subirBackup(f,'fotos-videos'); } }; i.click();
+}
+function backupContactos(){
+  const i=document.createElement('input'); i.type='file'; i.accept='.vcf,.csv';
+  i.onchange=()=>subirBackup(i.files[0],'contactos'); i.click();
+}
+async function guardarBackupAhora(){
+  alert('Selecciona primero WhatsApp, luego Fotos y Contactos. Se guardará todo en backups/'+uidActual+'/');
+  backupWhatsapp();
+}
+async function verBackups(){
+  const lista=document.getElementById('listaBackups'); lista.innerHTML='Cargando copias...';
+  const {data}=await sb.storage.from(BUCKET).list(`${uidActual}/backups`,{limit:100});
+  if(!data||!data.length){ lista.innerHTML='<div class=text-[11px] text-white/40>No hay carpetas aún</div>'; return; }
+  let html='';
+  for(const folder of data){
+    const {data:files}=await sb.storage.from(BUCKET).list(`${uidActual}/backups/${folder.name}`,{limit:50});
+    if(files) files.forEach(f=>{ html+=`<div class="flex justify-between glass p-2 rounded-xl text-[11px]"><span>${folder.name}/${f.name}</span><button onclick="restaurarBackup('${folder.name}','${f.name}')" class="text-[#0eb6ff] font-bold">Restaurar</button></div>`; });
+  }
+  lista.innerHTML=html||'<div class=text-[11px]>Vacío</div>';
+}
+async function restaurarBackup(carpeta,fileName){
+  const {data}=await sb.storage.from(BUCKET).createSignedUrl(`${uidActual}/backups/${carpeta}/${fileName}`, 86400);
+  if(data?.signedUrl) window.open(data.signedUrl,'_blank');
+}
+function iniciarAutoBackup(){
+  setInterval(()=>{
+    const ahora=new Date();
+    if(ahora.getHours()===2 && ahora.getMinutes()===0){
+      const ultima=localStorage.getItem('ultimaAuto_'+uidActual);
+      const hoy=ahora.toDateString();
+      if(ultima!==hoy){ localStorage.setItem('ultimaAuto_'+uidActual, hoy); guardarBackupAhora(); }
+    }
+  },60000);
+}
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
 </body>
