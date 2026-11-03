@@ -1,18 +1,17 @@
 {
-  "name": "Starmarc Cloud",
+  "name": "StarmarcCloud",
   "short_name": "StarmarcCloud",
-  "description": "Búnker privado de archivos, fotos, videos y backups de WhatsApp",
+  "description": "Bunker privado de archivos, fotos, videos y backups de WhatsApp",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0a102a",
-  "theme_color": "#0a102a",
-  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "icon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "icon.png",
